@@ -66,9 +66,19 @@ its box (so crowns/necklaces of different heights all land correctly):
 
 `accessoryRect` maps a layout into a pixel box within the drawn look rect;
 `anchorOffsetY` computes the vertical seat. **These values were tuned visually**
-against the reference character (a headless PNG compositor that mirrors the
-game's draw math). When re-tuning, change only the fractions/anchors — the draw
-and hit code should stay generic.
+using `scripts/preview-align.mjs` — a headless PNG compositor that mirrors the
+game's exact draw math, so you can eyeball placement without a browser:
+
+```
+node scripts/preview-align.mjs <look> <crown> <jewelry> <prop> [out.png]
+# e.g. node scripts/preview-align.mjs gold-teal crystal shell-choker mirror
+```
+
+Because accessory art has different aspect ratios, always re-check the *hard*
+cases when tuning: tall crowns (`crystal`) and long pendant necklaces
+(`shell-choker`, `gold-chain`, `gem-blue`), not just the choker/tiara. When
+re-tuning, change only the fractions/anchors in `ACCESSORY_LAYOUT` — the draw and
+hit code stay generic. Keep the `ACCESSORY_LAYOUT` copy in the script in sync.
 
 Because the fractions are relative to the gold-teal content box, poses whose art
 sits differently in the frame (`pose-*`) will align slightly less precisely; the
