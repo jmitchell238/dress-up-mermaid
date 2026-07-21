@@ -1,7 +1,7 @@
 'use strict';
 
 // Mermaid Dress-Up — Keep CACHE in sw.js in sync: 'dress-up-mermaid-' + GAME_VERSION
-const GAME_VERSION = '1.0.002';
+const GAME_VERSION = '1.0.003';
 const GAME_VERSION_LABEL = 'v' + GAME_VERSION;
 const GAME_NAME = 'Mermaid Dress-Up';
 
@@ -24,8 +24,8 @@ const PRAISE = ['Pretty!', 'Wow!', 'Sparkly!', 'Yay!', 'Beautiful!', 'Magic!', '
 
 /**
  * Draw order (back → front).
- * `look` = full illustrated mermaid (hair + top + tail + body baked, commercial quality).
- * Accessories stack on top so combos stay huge without misaligned modular limbs.
+ * `look` = full illustrated mermaid (style + pose).
+ * `prop` = handheld item she holds (shell, harp, …).
  */
 const LAYER_ORDER = ['bg', 'look', 'jewelry', 'crown', 'prop'];
 
@@ -39,8 +39,8 @@ const BACKGROUNDS = [
 ];
 
 /**
- * ~10 full mermaid characters (same pose family, distinct colors/styles).
- * Each is a complete illustrated look (hair + top + tail baked).
+ * Mermaid styles + poses (complete illustrated characters).
+ * Colors = different outfits; pose-* = different body poses of the classic gold mermaid.
  */
 const LOOKS = [
   { id: 'gold-teal',      label: 'Gold',     src: 'art/layers/look/gold-teal.png',      swatch: '#F5D76E' },
@@ -53,6 +53,9 @@ const LOOKS = [
   { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91' },
   { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A' },
   { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB' },
+  { id: 'pose-wave',      label: 'Wave',     src: 'art/layers/look/pose-wave.png',      swatch: '#81D4FA' },
+  { id: 'pose-side',      label: 'Side',     src: 'art/layers/look/pose-side.png',      swatch: '#CE93D8' },
+  { id: 'pose-swim',      label: 'Swim',     src: 'art/layers/look/pose-swim.png',      swatch: '#4DB6AC' },
 ];
 
 /** Crowns / tiaras (none = bare) */
@@ -66,7 +69,7 @@ const CROWNS = [
   { id: 'flower-crown', label: 'Flower',  src: 'art/layers/crown/flower-crown.png', swatch: '#F48FB1' },
 ];
 
-/** Necklaces / jewelry (none = bare) */
+/** Necklaces / jewelry (none = bare) — open U-necklaces, not bracelets */
 const JEWELRY = [
   { id: 'none',         label: 'None',     src: null, swatch: '#90A4AE' },
   { id: 'pearls',       label: 'Pearls',   src: 'art/layers/jewelry/pearls.png',       swatch: '#FFF8E1' },
@@ -77,7 +80,10 @@ const JEWELRY = [
   { id: 'sea-glass',    label: 'Glass',    src: 'art/layers/jewelry/sea-glass.png',    swatch: '#80CBC4' },
 ];
 
-/** Handheld props */
+/**
+ * Handheld props — things she holds in her hand (not part of her body).
+ * Clean isolated icons only (no mermaid leftovers).
+ */
 const PROPS = [
   { id: 'none',    label: 'None',    src: null, swatch: '#90A4AE' },
   { id: 'shell',   label: 'Shell',   src: 'art/layers/prop/shell.png',   swatch: '#FFCCBC' },
@@ -88,11 +94,11 @@ const PROPS = [
 ];
 
 const CATEGORIES = [
-  { id: 'bg',      label: 'Scene',  items: BACKGROUNDS, required: true },
-  { id: 'look',    label: 'Mermaid', items: LOOKS,      required: true },
-  { id: 'crown',   label: 'Crown',  items: CROWNS,      required: false },
-  { id: 'jewelry', label: 'Gems',   items: JEWELRY,     required: false },
-  { id: 'prop',    label: 'Prop',   items: PROPS,       required: false },
+  { id: 'bg',      label: 'Scene',   items: BACKGROUNDS, required: true },
+  { id: 'look',    label: 'Mermaid', items: LOOKS,       required: true },
+  { id: 'crown',   label: 'Crown',   items: CROWNS,      required: false },
+  { id: 'jewelry', label: 'Gems',    items: JEWELRY,     required: false },
+  { id: 'prop',    label: 'Hold',    items: PROPS,       required: false },
 ];
 
 const DEFAULT_OUTFIT = {

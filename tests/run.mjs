@@ -62,6 +62,7 @@ function loadGame() {
       LAYER_ORDER, ACCESSORY_LAYOUT,
       outfitsEqual, isValidItem, normalizeOutfit, resolveEquip, randomOutfit,
       findItem, itemForOutfit, resolveLayers, allLayerSrcs, fitContain, MERMAID_VIEW,
+      ACCESSORY_LAYOUT, LOOK_CONTENT, accessoryRect,
       equip, enterPlay, enterMenu, doSurprise, doFavorite, doShowOff,
       checkMatch, rebuildHits, handleTap,
       state: () => state,
@@ -149,7 +150,9 @@ section('config + art');
 const G = loadGame();
 assert(G.GAME_NAME.includes('Mermaid'), 'game name');
 assert(G.CATEGORIES.length >= 5, 'enough categories');
-assertEq(G.LOOKS.length, 10, 'exactly 10 mermaid looks');
+assert(G.LOOKS.length >= 12, 'mermaid styles + poses');
+assert(G.LOOKS.some(l => l.id.startsWith('pose-')), 'has pose variants');
+assert(G.CATEGORIES.some(c => c.id === 'prop' && c.label === 'Hold'), 'prop labeled Hold');
 // View box is portrait (~3:4), not wide
 assert(G.MERMAID_VIEW.w / G.MERMAID_VIEW.h < 0.8, 'mermaid view not too wide');
 // Contain-fit: 768×1024 into 350×360 must not produce stretched 350×360
@@ -238,6 +241,13 @@ assert(G.LAYER_ORDER.includes('look'), 'has look');
 assert(G.ACCESSORY_LAYOUT.crown, 'crown layout');
 const layers = G.resolveLayers(G.DEFAULT_OUTFIT);
 assert(layers.some(l => l.key === 'look'), 'resolve includes look');
+// Crown sits on upper content (head), not bottom
+const cr = G.accessoryRect('crown', 0, 0, 280, 374);
+const neck = G.accessoryRect('jewelry', 0, 0, 280, 374);
+const hand = G.accessoryRect('prop', 0, 0, 280, 374);
+assert(cr && cr.y < 80, 'crown near top of character');
+assert(neck && neck.y > cr.y, 'gems below crown');
+assert(hand && hand.x > 120, 'hold item toward side hand');
 
 console.log('\n\n' + passed + ' passed, ' + failed + ' failed');
 if (failures.length) {

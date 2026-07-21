@@ -67,11 +67,39 @@ function resolveLayers(outfit) {
 }
 
 /**
- * Accessory placement within the mermaid view rect (normalized 0–1 of dw/dh).
- * Looks/bgs fill the full rect; crowns sit on the head, jewelry at neck, props at hand.
+ * Character content box inside a full-frame look image (measured on gold-teal 768×1024).
+ * Accessories are placed relative to THIS, not the padded canvas edge.
+ */
+const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
+
+/**
+ * Accessory placement as fractions of the character content box.
+ * prop = handheld item near her side (she holds it).
  */
 const ACCESSORY_LAYOUT = {
-  crown:   { x: 0.28, y: 0.02, w: 0.44, h: 0.18 },
-  jewelry: { x: 0.32, y: 0.26, w: 0.36, h: 0.12 },
-  prop:    { x: 0.58, y: 0.38, w: 0.34, h: 0.32 },
+  // Sits on top of head / hair (y may be slightly negative = above content box)
+  crown:   { x: 0.26, y: -0.04, w: 0.48, h: 0.13 },
+  // Open U-necklace at the neck (below chin, above shell top)
+  jewelry: { x: 0.30, y: 0.29, w: 0.40, h: 0.11 },
+  // Held item near her hand (viewer's right / her left)
+  prop:    { x: 0.66, y: 0.42, w: 0.32, h: 0.28 },
 };
+
+/**
+ * Map accessory layout into the drawn look rectangle (after contain-fit).
+ * @returns {{ x: number, y: number, w: number, h: number }}
+ */
+function accessoryRect(key, lookX, lookY, lookW, lookH) {
+  const layout = ACCESSORY_LAYOUT[key];
+  if (!layout) return null;
+  const cx = lookX + lookW * LOOK_CONTENT.x;
+  const cy = lookY + lookH * LOOK_CONTENT.y;
+  const cw = lookW * LOOK_CONTENT.w;
+  const ch = lookH * LOOK_CONTENT.h;
+  return {
+    x: cx + cw * layout.x,
+    y: cy + ch * layout.y,
+    w: cw * layout.w,
+    h: ch * layout.h,
+  };
+}

@@ -126,14 +126,13 @@ function rebuildHits() {
     });
   });
 
-  // Tray items — portrait-friendly cells (never a wide strip that squashes thumbs)
+  // Tray items — compact portrait cells (image + name packed together)
   const cat = CATEGORIES[categoryIndex];
   const items = cat.items;
-  const trayY = 460;
-  const trayH = 96;
+  const trayY = 458;
+  const trayH = 100;
   const n = items.length;
-  // Cap width so cells stay roughly square / portrait; shrink if many items
-  const cell = Math.min(64, (W - 16) / Math.max(1, n));
+  const cell = Math.min(68, (W - 12) / Math.max(1, n));
   const total = n * cell;
   const x0 = (W - total) / 2;
   items.forEach((item, i) => {
@@ -389,27 +388,36 @@ function drawLayeredOutfit(ctx, outfit, dx, dy, dw, dh, opts = {}) {
   if (rot) ctx.rotate(rot);
   ctx.translate(-dw / 2, -dh / 2);
 
+  // Draw look first so we know where the character sits, then snap accessories to her.
   let anyDrawn = false;
+  let lookX = 0;
+  let lookY = 0;
+  let lookW = dw;
+  let lookH = dh;
+
+  const lookLayer = layers.find(l => l.key === 'look');
+  if (lookLayer && lookLayer.img && lookLayer.img.complete && lookLayer.img.naturalWidth) {
+    const iw = lookLayer.img.naturalWidth || LAYER_W;
+    const ih = lookLayer.img.naturalHeight || LAYER_H;
+    const fit = fitContain(iw, ih, dw, dh);
+    lookX = fit.x;
+    lookY = fit.y;
+    lookW = fit.w;
+    lookH = fit.h;
+    ctx.drawImage(lookLayer.img, 0, 0, iw, ih, lookX, lookY, lookW, lookH);
+    anyDrawn = true;
+  }
+
   for (const layer of layers) {
     if (layer.key === 'bg' && opts.skipBg) continue;
+    if (layer.key === 'look') continue;
     if (!(layer.img && layer.img.complete && layer.img.naturalWidth)) continue;
 
-    const layout = typeof ACCESSORY_LAYOUT !== 'undefined' ? ACCESSORY_LAYOUT[layer.key] : null;
-    if (layout) {
-      // Trimmed accessory PNGs — place at head / neck / hand anchors (relative to view box)
-      const ax = layout.x * dw;
-      const ay = layout.y * dh;
-      const aw = layout.w * dw;
-      const ah = layout.h * dh;
-      const fit = fitContain(layer.img.naturalWidth, layer.img.naturalHeight, aw, ah);
-      ctx.drawImage(layer.img, ax + fit.x, ay + fit.y, fit.w, fit.h);
-    } else if (layer.key === 'look') {
-      // NEVER stretch — contain-fit portrait art inside the view rect
-      const iw = layer.img.naturalWidth || LAYER_W;
-      const ih = layer.img.naturalHeight || LAYER_H;
-      const fit = fitContain(iw, ih, dw, dh);
-      ctx.drawImage(layer.img, 0, 0, iw, ih, fit.x, fit.y, fit.w, fit.h);
-      anyDrawn = true;
+    if (layer.key === 'crown' || layer.key === 'jewelry' || layer.key === 'prop') {
+      const box = accessoryRect(layer.key, lookX, lookY, lookW, lookH);
+      if (!box) continue;
+      const fit = fitContain(layer.img.naturalWidth, layer.img.naturalHeight, box.w, box.h);
+      ctx.drawImage(layer.img, box.x + fit.x, box.y + fit.y, fit.w, fit.h);
     } else {
       // Backgrounds (when drawn as a layer) — cover the box
       ctx.drawImage(layer.img, 0, 0, layer.img.naturalWidth, layer.img.naturalHeight, 0, 0, dw, dh);
@@ -544,13 +552,13 @@ function drawPlayChrome(ctx) {
 
   // Tray panel
   ctx.fillStyle = 'rgba(0, 30, 50, 0.55)';
-  roundRect(ctx, 8, 454, W - 16, 108, 16);
+  roundRect(ctx, 6, 452, W - 12, 112, 16);
   ctx.fill();
 
-  // Tray items — square-ish portrait thumbs, always contain-fit (never stretch)
+  // Tray items — image + name stacked tightly (no giant empty gap)
   for (const h of hitTray) {
     const selected = save.outfit[h.catId] === h.item.id;
-    ctx.fillStyle = selected ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.18)';
+    ctx.fillStyle = selected ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.16)';
     roundRect(ctx, h.x, h.y, h.w, h.h, 12);
     ctx.fill();
     if (selected) {
@@ -560,33 +568,26 @@ function drawPlayChrome(ctx) {
       ctx.stroke();
     }
 
-    // Portrait thumb box inside the cell (3:4-ish, leaves room for label)
-    const labelH = 18;
-    const pad = 5;
-    const maxTw = h.w - pad * 2;
-    const maxTh = h.h - labelH - pad * 2;
-    // Prefer portrait 3:4; if cell is narrow, shrink width first
-    let tw = maxTw;
-    let th = tw * (4 / 3);
-    if (th > maxTh) {
-      th = maxTh;
-      tw = th * (3 / 4);
-    }
-    if (tw > maxTw) {
-      tw = maxTw;
-      th = Math.min(maxTh, tw * (4 / 3));
-    }
+    const pad = 4;
+    const labelH = 14;
+    // One tight stack: thumb then label, vertically centered as a group
+    const stackH = h.h - pad * 2;
+    const thumbH = stackH - labelH - 2;
+    const thumbW = h.w - pad * 2;
+    // Prefer nearly-square / slight portrait well so mermaids aren't tiny at top
+    let tw = thumbW;
+    let th = Math.min(thumbH, tw * 1.15);
+    if (th > thumbH) th = thumbH;
+    const groupH = th + 2 + labelH;
+    const groupY = h.y + (h.h - groupH) / 2;
     const tx = h.x + (h.w - tw) / 2;
-    const ty = h.y + pad;
+    const ty = groupY;
 
-    // Soft swatch well behind the art
-    ctx.fillStyle = h.item.swatch
-      ? (selected ? h.item.swatch : 'rgba(0,0,0,0.2)')
-      : 'rgba(0,0,0,0.2)';
-    if (h.item.swatch && !selected) {
-      ctx.globalAlpha = 0.35;
-      ctx.fillStyle = h.item.swatch;
-    }
+    // Soft well
+    ctx.fillStyle = selected
+      ? (h.item.swatch || '#B3E5FC')
+      : 'rgba(0, 40, 60, 0.45)';
+    if (selected && h.item.swatch) ctx.globalAlpha = 0.45;
     roundRect(ctx, tx, ty, tw, th, 8);
     ctx.fill();
     ctx.globalAlpha = 1;
@@ -597,34 +598,33 @@ function drawPlayChrome(ctx) {
         ctx.save();
         roundRect(ctx, tx, ty, tw, th, 8);
         ctx.clip();
-        // CONTAIN fit — full art visible, correct proportions, no stretch
-        const fit = fitContain(img.naturalWidth, img.naturalHeight, tw - 4, th - 4);
-        ctx.drawImage(
-          img,
-          tx + 2 + fit.x,
-          ty + 2 + fit.y,
-          fit.w,
-          fit.h
-        );
+        // Contain-fit with a little padding; mermaids fill most of the well
+        const inset = 2;
+        const fit = fitContain(img.naturalWidth, img.naturalHeight, tw - inset * 2, th - inset * 2);
+        // Bias mermaid thumbs slightly upward so face is visible (less empty feet space)
+        let oy = 0;
+        if (h.catId === 'look' || h.catId === 'bg') {
+          oy = Math.min(4, (th - inset * 2 - fit.h) * 0.15);
+        }
+        ctx.drawImage(img, tx + inset + fit.x, ty + inset + fit.y - oy, fit.w, fit.h);
         ctx.restore();
       }
     } else if (h.item.id === 'none') {
       ctx.strokeStyle = selected ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.45)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(tx + 8, ty + 8);
-      ctx.lineTo(tx + tw - 8, ty + th - 8);
+      ctx.moveTo(tx + 6, ty + 6);
+      ctx.lineTo(tx + tw - 6, ty + th - 6);
       ctx.stroke();
     }
 
     ctx.fillStyle = selected ? '#006064' : '#E0F7FA';
-    ctx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
+    ctx.font = 'bold 9px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // Truncate long labels in tiny cells
     let label = h.item.label;
-    if (h.w < 40 && label.length > 5) label = label.slice(0, 4) + '…';
-    ctx.fillText(label, h.x + h.w / 2, h.y + h.h - 10);
+    if (h.w < 42 && label.length > 5) label = label.slice(0, 4) + '…';
+    ctx.fillText(label, h.x + h.w / 2, groupY + th + 2 + labelH / 2);
   }
 
   // Action buttons
