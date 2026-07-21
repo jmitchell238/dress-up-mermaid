@@ -71,34 +71,37 @@ Requires a strict pose template and per-piece framing — tracked as art expansi
 - This document
 - Beads epic + tasks (Arcade Hub tracker)
 
-### Phase 1 — Scaffold (session 1)
+### Phase 1 — Scaffold ✅
 - Independent repo structure (HTML/CSS/JS PWA, same patterns as other kids games)
 - Layer asset loader + compositor
 - Menu + play chrome (categories, tray, surprise / save / show-off)
 - Config / save / audio / particles / SW / tests shell
 
-### Phase 2 — Art pack v1 (session 1–2)
-- Style anchor mermaid
-- Base body (3 skin tones)
-- First full set of layers (table above “v1 ship”)
+### Phase 2 — Art pack v1 ✅
+- Style anchor mermaid (commercial princess cartoon style)
+- 12 full mermaid looks via edit-chain
+- 5 scenes, 6 crowns, 6 jewelry, 5 props
 - Cover image + app icons
 - Chroma-key → transparent pipeline (`scripts/key_layers.sh`)
 
-### Phase 3 — Playable loop (session 1)
+### Phase 3 — Playable loop ✅
 - Free Play: equip / unequip / surprise / favorites / show-off dance
 - Match Me: ghost target outfit + cheer on match
 - Praise bubbles, confetti, soft SFX
 - Offline PWA after first visit
 
-### Phase 4 — Ship
-- GitHub repo + Pages
-- Arcade Hub: cover, `games.json`, `sw.js` asset list, version bump, README library line
+### Phase 4 — Ship ✅
+- GitHub repo + Pages: https://jmitchell238.github.io/dress-up-mermaid/
+- Arcade Hub catalog entry (v1.1.033)
 - Parent notes (no ads/accounts/fail)
 
-### Phase 5 — Expand (follow-up sessions)
-- More hair / tops / tails / jewelry / backgrounds until it feels “endless”
-- Optional: second mermaid character, makeup, ear fins, glitter trails
-- Optional: photo booth “snapshot” (canvas export) of favorite looks
+### Phase 5 — Expand (next sessions) 🔜
+- **More looks** until it feels endless (target 30+)
+- Better unique props (harp/bubbles currently share placeholder art)
+- Unique blue-ocean look (was temp duplicate of gold-teal)
+- Optional: modular hair/top/tail if pose-rig is worth it
+- Optional: second mermaid character, makeup, glitter trails
+- Optional: photo booth “snapshot” of favorite looks
 
 ---
 
