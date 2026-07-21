@@ -126,13 +126,14 @@ function rebuildHits() {
     });
   });
 
-  // Tray items
+  // Tray items — portrait-friendly cells (never a wide strip that squashes thumbs)
   const cat = CATEGORIES[categoryIndex];
   const items = cat.items;
-  const trayY = 462;
-  const trayH = 92;
+  const trayY = 460;
+  const trayH = 96;
   const n = items.length;
-  const cell = Math.min(70, (W - 20) / n);
+  // Cap width so cells stay roughly square / portrait; shrink if many items
+  const cell = Math.min(64, (W - 16) / Math.max(1, n));
   const total = n * cell;
   const x0 = (W - total) / 2;
   items.forEach((item, i) => {
@@ -543,10 +544,10 @@ function drawPlayChrome(ctx) {
 
   // Tray panel
   ctx.fillStyle = 'rgba(0, 30, 50, 0.55)';
-  roundRect(ctx, 8, 456, W - 16, 104, 16);
+  roundRect(ctx, 8, 454, W - 16, 108, 16);
   ctx.fill();
 
-  // Tray items
+  // Tray items — square-ish portrait thumbs, always contain-fit (never stretch)
   for (const h of hitTray) {
     const selected = save.outfit[h.catId] === h.item.id;
     ctx.fillStyle = selected ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.18)';
@@ -559,40 +560,56 @@ function drawPlayChrome(ctx) {
       ctx.stroke();
     }
 
-    // Thumbnail: crop of layer if available, else swatch
-    const thumbPad = 6;
-    const tw = h.w - thumbPad * 2;
-    const th = h.h - 28;
-    const tx = h.x + thumbPad;
-    const ty = h.y + 6;
+    // Portrait thumb box inside the cell (3:4-ish, leaves room for label)
+    const labelH = 18;
+    const pad = 5;
+    const maxTw = h.w - pad * 2;
+    const maxTh = h.h - labelH - pad * 2;
+    // Prefer portrait 3:4; if cell is narrow, shrink width first
+    let tw = maxTw;
+    let th = tw * (4 / 3);
+    if (th > maxTh) {
+      th = maxTh;
+      tw = th * (3 / 4);
+    }
+    if (tw > maxTw) {
+      tw = maxTw;
+      th = Math.min(maxTh, tw * (4 / 3));
+    }
+    const tx = h.x + (h.w - tw) / 2;
+    const ty = h.y + pad;
+
+    // Soft swatch well behind the art
+    ctx.fillStyle = h.item.swatch
+      ? (selected ? h.item.swatch : 'rgba(0,0,0,0.2)')
+      : 'rgba(0,0,0,0.2)';
+    if (h.item.swatch && !selected) {
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = h.item.swatch;
+    }
+    roundRect(ctx, tx, ty, tw, th, 8);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
     if (h.item.src) {
       const img = getImage(h.item.src);
       if (img && img.complete && img.naturalWidth) {
-        // Contain-fit thumbnail (no stretch) — cover-style zoom for looks via slightly larger box
         ctx.save();
         roundRect(ctx, tx, ty, tw, th, 8);
         ctx.clip();
-        const iw = img.naturalWidth;
-        const ih = img.naturalHeight;
-        // Cover-fit: fill thumb without stretching (may crop edges)
-        const scale = Math.max(tw / iw, th / ih);
-        const rw = iw * scale;
-        const rh = ih * scale;
-        const rx = tx + (tw - rw) / 2;
-        const ry = ty + (th - rh) / 2;
-        ctx.drawImage(img, rx, ry, rw, rh);
+        // CONTAIN fit — full art visible, correct proportions, no stretch
+        const fit = fitContain(img.naturalWidth, img.naturalHeight, tw - 4, th - 4);
+        ctx.drawImage(
+          img,
+          tx + 2 + fit.x,
+          ty + 2 + fit.y,
+          fit.w,
+          fit.h
+        );
         ctx.restore();
-      } else {
-        ctx.fillStyle = h.item.swatch || '#90A4AE';
-        roundRect(ctx, tx, ty, tw, th, 8);
-        ctx.fill();
       }
-    } else {
-      // "None" tile
-      ctx.fillStyle = 'rgba(144,164,174,0.5)';
-      roundRect(ctx, tx, ty, tw, th, 8);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    } else if (h.item.id === 'none') {
+      ctx.strokeStyle = selected ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.45)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(tx + 8, ty + 8);
@@ -604,7 +621,10 @@ function drawPlayChrome(ctx) {
     ctx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(h.item.label, h.x + h.w / 2, h.y + h.h - 12);
+    // Truncate long labels in tiny cells
+    let label = h.item.label;
+    if (h.w < 40 && label.length > 5) label = label.slice(0, 4) + '…';
+    ctx.fillText(label, h.x + h.w / 2, h.y + h.h - 10);
   }
 
   // Action buttons
@@ -660,7 +680,7 @@ function drawPlayChrome(ctx) {
   ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('Looks ' + sessionDress, W / 2, 22);
+  ctx.fillText('Styles ' + sessionDress, W / 2, 22);
 }
 
 function drawPlay(ctx) {

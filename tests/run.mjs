@@ -157,6 +157,10 @@ const fit = G.fitContain(768, 1024, 350, 360);
 assert(Math.abs(fit.w / fit.h - 768 / 1024) < 0.01, 'fit preserves aspect ratio');
 assert(fit.w <= 350 && fit.h <= 360, 'fit stays inside box');
 assert(fit.w < 350, 'wide box does not force full width (no horizontal stretch)');
+// Tray-style contain: tall portrait into wide cell stays portrait
+const trayFit = G.fitContain(768, 1024, 58, 64);
+assert(Math.abs(trayFit.w / trayFit.h - 0.75) < 0.02, 'tray contain keeps 3:4');
+assert(trayFit.h <= 64 && trayFit.w <= 58, 'tray thumb inside cell');
 assert(G.BACKGROUNDS.length >= 4, 'enough backgrounds');
 
 const srcs = G.allLayerSrcs();

@@ -1,7 +1,7 @@
 'use strict';
 
 // Mermaid Dress-Up — Keep CACHE in sw.js in sync: 'dress-up-mermaid-' + GAME_VERSION
-const GAME_VERSION = '1.0.001';
+const GAME_VERSION = '1.0.002';
 const GAME_VERSION_LABEL = 'v' + GAME_VERSION;
 const GAME_NAME = 'Mermaid Dress-Up';
 

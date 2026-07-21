@@ -21,7 +21,7 @@ See [ROADMAP.md](./ROADMAP.md) for phases, art strategy, and expansion plans.
 
 ## Features (v1)
 
-- **12 mermaid looks** (hair + top + tail baked as polished full characters)
+- **10 mermaid styles** (hair + top + tail baked as polished full characters)
 - **5 scenes**, **6 crowns**, **6 jewelry**, **5 props**
 - Save up to 8 favorite outfits
 - Surprise random look + show-off dance/bubbles
