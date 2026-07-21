@@ -1,7 +1,7 @@
 'use strict';
 
 // Mermaid Dress-Up — Keep CACHE in sw.js in sync: 'dress-up-mermaid-' + GAME_VERSION
-const GAME_VERSION = '1.0.000';
+const GAME_VERSION = '1.0.001';
 const GAME_VERSION_LABEL = 'v' + GAME_VERSION;
 const GAME_NAME = 'Mermaid Dress-Up';
 
@@ -39,22 +39,20 @@ const BACKGROUNDS = [
 ];
 
 /**
- * Full mermaid looks — each is a complete illustrated character (same pose family).
- * Expanding this list is the main way we add “lots of options.”
+ * ~10 full mermaid characters (same pose family, distinct colors/styles).
+ * Each is a complete illustrated look (hair + top + tail baked).
  */
 const LOOKS = [
-  { id: 'gold-teal',     label: 'Gold',     src: 'art/layers/look/gold-teal.png',     swatch: '#F5D76E' },
-  { id: 'pink-sparkle',  label: 'Pink',     src: 'art/layers/look/pink-sparkle.png',  swatch: '#F48FB1' },
-  { id: 'purple-night',  label: 'Purple',   src: 'art/layers/look/purple-night.png',  swatch: '#CE93D8' },
-  { id: 'teal-braid',    label: 'Teal',     src: 'art/layers/look/teal-braid.png',    swatch: '#4DB6AC' },
-  { id: 'ruby-sunset',   label: 'Ruby',     src: 'art/layers/look/ruby-sunset.png',   swatch: '#EF5350' },
-  { id: 'silver-ice',    label: 'Silver',   src: 'art/layers/look/silver-ice.png',    swatch: '#E0E0E0' },
-  { id: 'blue-ocean',    label: 'Blue',     src: 'art/layers/look/blue-ocean.png',    swatch: '#42A5F5' },
-  { id: 'rainbow',       label: 'Rainbow',  src: 'art/layers/look/rainbow.png',       swatch: '#FF7043' },
-  { id: 'peach-coral',   label: 'Peach',    src: 'art/layers/look/peach-coral.png',   swatch: '#FFAB91' },
-  { id: 'deep-emerald',  label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',  swatch: '#66BB6A' },
-  { id: 'lavender-pearl',label: 'Lavender', src: 'art/layers/look/lavender-pearl.png',swatch: '#B39DDB' },
-  { id: 'honey-amber',   label: 'Honey',    src: 'art/layers/look/honey-amber.png',   swatch: '#FFCA28' },
+  { id: 'gold-teal',      label: 'Gold',     src: 'art/layers/look/gold-teal.png',      swatch: '#F5D76E' },
+  { id: 'pink-sparkle',   label: 'Pink',     src: 'art/layers/look/pink-sparkle.png',   swatch: '#F48FB1' },
+  { id: 'purple-night',   label: 'Purple',   src: 'art/layers/look/purple-night.png',   swatch: '#CE93D8' },
+  { id: 'teal-braid',     label: 'Teal',     src: 'art/layers/look/teal-braid.png',     swatch: '#4DB6AC' },
+  { id: 'ruby-sunset',    label: 'Ruby',     src: 'art/layers/look/ruby-sunset.png',    swatch: '#EF5350' },
+  { id: 'silver-ice',     label: 'Silver',   src: 'art/layers/look/silver-ice.png',     swatch: '#E0E0E0' },
+  { id: 'rainbow',        label: 'Rainbow',  src: 'art/layers/look/rainbow.png',        swatch: '#FF7043' },
+  { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91' },
+  { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A' },
+  { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB' },
 ];
 
 /** Crowns / tiaras (none = bare) */
@@ -91,7 +89,7 @@ const PROPS = [
 
 const CATEGORIES = [
   { id: 'bg',      label: 'Scene',  items: BACKGROUNDS, required: true },
-  { id: 'look',    label: 'Look',   items: LOOKS,       required: true },
+  { id: 'look',    label: 'Mermaid', items: LOOKS,      required: true },
   { id: 'crown',   label: 'Crown',  items: CROWNS,      required: false },
   { id: 'jewelry', label: 'Gems',   items: JEWELRY,     required: false },
   { id: 'prop',    label: 'Prop',   items: PROPS,       required: false },

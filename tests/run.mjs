@@ -61,7 +61,7 @@ function loadGame() {
       BACKGROUNDS, LOOKS, CROWNS, JEWELRY, PROPS, DEFAULT_OUTFIT, MAX_FAVORITES,
       LAYER_ORDER, ACCESSORY_LAYOUT,
       outfitsEqual, isValidItem, normalizeOutfit, resolveEquip, randomOutfit,
-      findItem, itemForOutfit, resolveLayers, allLayerSrcs,
+      findItem, itemForOutfit, resolveLayers, allLayerSrcs, fitContain, MERMAID_VIEW,
       equip, enterPlay, enterMenu, doSurprise, doFavorite, doShowOff,
       checkMatch, rebuildHits, handleTap,
       state: () => state,
@@ -149,7 +149,14 @@ section('config + art');
 const G = loadGame();
 assert(G.GAME_NAME.includes('Mermaid'), 'game name');
 assert(G.CATEGORIES.length >= 5, 'enough categories');
-assert(G.LOOKS.length >= 8, 'enough looks');
+assertEq(G.LOOKS.length, 10, 'exactly 10 mermaid looks');
+// View box is portrait (~3:4), not wide
+assert(G.MERMAID_VIEW.w / G.MERMAID_VIEW.h < 0.8, 'mermaid view not too wide');
+// Contain-fit: 768×1024 into 350×360 must not produce stretched 350×360
+const fit = G.fitContain(768, 1024, 350, 360);
+assert(Math.abs(fit.w / fit.h - 768 / 1024) < 0.01, 'fit preserves aspect ratio');
+assert(fit.w <= 350 && fit.h <= 360, 'fit stays inside box');
+assert(fit.w < 350, 'wide box does not force full width (no horizontal stretch)');
 assert(G.BACKGROUNDS.length >= 4, 'enough backgrounds');
 
 const srcs = G.allLayerSrcs();

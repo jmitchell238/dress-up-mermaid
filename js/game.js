@@ -20,8 +20,19 @@ let hitButtons = [];
 let hitTray = [];
 let hitCats = [];
 
-/** Mermaid draw rect inside stage (character area above tray). */
-const MERMAID_VIEW = { x: 20, y: 48, w: 350, h: 360 };
+/**
+ * Mermaid draw rect inside stage (character area above tray).
+ * Art is 3:4 portrait (768×1024) — keep this box ~3:4 so she is never stretched wide.
+ */
+const MERMAID_VIEW = { x: 55, y: 32, w: 280, h: 374 };
+
+/** Contain-fit src into box (preserve aspect ratio, letterbox centered). */
+function fitContain(srcW, srcH, boxW, boxH) {
+  const scale = Math.min(boxW / srcW, boxH / srcH);
+  const w = srcW * scale;
+  const h = srcH * scale;
+  return { w, h, x: (boxW - w) / 2, y: (boxH - h) / 2 };
+}
 
 function currentMode() {
   return MODES[modeId] || MODES.free;
@@ -384,24 +395,23 @@ function drawLayeredOutfit(ctx, outfit, dx, dy, dw, dh, opts = {}) {
 
     const layout = typeof ACCESSORY_LAYOUT !== 'undefined' ? ACCESSORY_LAYOUT[layer.key] : null;
     if (layout) {
-      // Trimmed accessory PNGs — place at head / neck / hand anchors
+      // Trimmed accessory PNGs — place at head / neck / hand anchors (relative to view box)
       const ax = layout.x * dw;
       const ay = layout.y * dh;
       const aw = layout.w * dw;
       const ah = layout.h * dh;
-      // Contain fit (preserve aspect)
-      const iw = layer.img.naturalWidth;
-      const ih = layer.img.naturalHeight;
-      const scale = Math.min(aw / iw, ah / ih);
-      const rw = iw * scale;
-      const rh = ih * scale;
-      const rx = ax + (aw - rw) / 2;
-      const ry = ay + (ah - rh) / 2;
-      ctx.drawImage(layer.img, rx, ry, rw, rh);
+      const fit = fitContain(layer.img.naturalWidth, layer.img.naturalHeight, aw, ah);
+      ctx.drawImage(layer.img, ax + fit.x, ay + fit.y, fit.w, fit.h);
+    } else if (layer.key === 'look') {
+      // NEVER stretch — contain-fit portrait art inside the view rect
+      const iw = layer.img.naturalWidth || LAYER_W;
+      const ih = layer.img.naturalHeight || LAYER_H;
+      const fit = fitContain(iw, ih, dw, dh);
+      ctx.drawImage(layer.img, 0, 0, iw, ih, fit.x, fit.y, fit.w, fit.h);
+      anyDrawn = true;
     } else {
-      // Full-frame look / background art (LAYER_W × LAYER_H)
+      // Backgrounds (when drawn as a layer) — cover the box
       ctx.drawImage(layer.img, 0, 0, layer.img.naturalWidth, layer.img.naturalHeight, 0, 0, dw, dh);
-      if (layer.key === 'look') anyDrawn = true;
     }
   }
 
@@ -558,11 +568,19 @@ function drawPlayChrome(ctx) {
     if (h.item.src) {
       const img = getImage(h.item.src);
       if (img && img.complete && img.naturalWidth) {
-        // Draw centered crop of upper portion for accessories, full for body
+        // Contain-fit thumbnail (no stretch) — cover-style zoom for looks via slightly larger box
         ctx.save();
         roundRect(ctx, tx, ty, tw, th, 8);
         ctx.clip();
-        ctx.drawImage(img, 0, 0, LAYER_W, LAYER_H, tx - tw * 0.15, ty - th * 0.05, tw * 1.3, th * 1.3);
+        const iw = img.naturalWidth;
+        const ih = img.naturalHeight;
+        // Cover-fit: fill thumb without stretching (may crop edges)
+        const scale = Math.max(tw / iw, th / ih);
+        const rw = iw * scale;
+        const rh = ih * scale;
+        const rx = tx + (tw - rw) / 2;
+        const ry = ty + (th - rh) / 2;
+        ctx.drawImage(img, rx, ry, rw, rh);
         ctx.restore();
       } else {
         ctx.fillStyle = h.item.swatch || '#90A4AE';
@@ -621,16 +639,17 @@ function drawPlayChrome(ctx) {
     ctx.fillText(h.label, h.x + h.w / 2, h.y + h.h / 2);
   }
 
-  // Mode / match banner
+  // Mode / match banner (portrait-friendly panel)
   if (currentMode().challenge && matchTarget) {
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    roundRect(ctx, W - 118, 52, 106, 90, 12);
+    roundRect(ctx, W - 100, 48, 88, 128, 12);
     ctx.fill();
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(matchDone ? 'Matched!' : 'Match me', W - 65, 66);
-    drawLayeredOutfit(ctx, matchTarget, W - 112, 72, 94, 64, { ghost: !matchDone, skipBg: true });
+    ctx.fillText(matchDone ? 'Matched!' : 'Match me', W - 56, 62);
+    // Portrait ghost (3:4) — never a wide strip that stretches her
+    drawLayeredOutfit(ctx, matchTarget, W - 94, 68, 76, 100, { ghost: !matchDone, skipBg: true });
   }
 
   // Session looks counter
@@ -683,10 +702,10 @@ function drawMenuBackdrop(ctx) {
   // Dim for menu card readability
   ctx.fillStyle = 'rgba(0, 20, 40, 0.35)';
   ctx.fillRect(0, 0, W, H);
-  // Soft mermaid preview behind menu (dimmed)
+  // Soft mermaid preview behind menu (dimmed) — portrait 3:4 box
   ctx.save();
   ctx.globalAlpha = 0.55;
-  drawLayeredOutfit(ctx, save.outfit, 55, 180, 280, 300, { skipBg: true });
+  drawLayeredOutfit(ctx, save.outfit, 75, 160, 240, 320, { skipBg: true });
   ctx.restore();
   drawParticles(ctx);
 }
