@@ -1,0 +1,6 @@
+.DS_Store
+*.log
+.art-raw/
+.scratch/
+node_modules/
+art/preview-composite.jpg

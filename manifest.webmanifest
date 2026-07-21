@@ -1,0 +1,26 @@
+{
+  "name": "Mermaid Dress-Up",
+  "short_name": "Mermaid",
+  "description": "Dress a beautiful mermaid with hair, shells, tails, crowns, and sparkly gems. Save favorites and show off with bubbles. Creative free play for ages 4–6.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a3d5c",
+  "theme_color": "#0288D1",
+  "categories": ["games", "kids", "entertainment"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
