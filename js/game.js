@@ -20,6 +20,15 @@ let hitButtons = [];
 let hitTray = [];
 let hitCats = [];
 
+/** Horizontal scroll of the item tray (px). Rebuilt/clamped in rebuildHits. */
+let trayScroll = 0;
+let trayScrollMax = 0;
+
+/** Tray viewport + cell geometry (single source of truth for layout + input). */
+const TRAY = { x: 10, y: 458, w: W - 20, h: 100, cell: 66 };
+
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
 /**
  * Mermaid draw rect inside stage (character area above tray).
  * Art is 3:4 portrait (768×1024) — keep this box ~3:4 so she is never stretched wide.
@@ -126,21 +135,25 @@ function rebuildHits() {
     });
   });
 
-  // Tray items — compact portrait cells (image + name packed together)
+  // Tray items — fixed-size portrait cells that scroll horizontally when they
+  // overflow the viewport (swipe left/right), instead of squashing to fit.
   const cat = CATEGORIES[categoryIndex];
   const items = cat.items;
-  const trayY = 458;
-  const trayH = 100;
   const n = items.length;
-  const cell = Math.min(68, (W - 12) / Math.max(1, n));
+  const cell = TRAY.cell;
   const total = n * cell;
-  const x0 = (W - total) / 2;
+  trayScrollMax = Math.max(0, total - TRAY.w);
+  trayScroll = clamp(trayScroll, 0, trayScrollMax);
+  // Center when everything fits; left-align (scrollable) when it overflows.
+  const x0 = trayScrollMax > 0
+    ? TRAY.x - trayScroll
+    : TRAY.x + (TRAY.w - total) / 2;
   items.forEach((item, i) => {
     hitTray.push({
       x: x0 + i * cell + 2,
-      y: trayY,
+      y: TRAY.y,
       w: cell - 4,
-      h: trayH,
+      h: TRAY.h,
       item,
       catId: cat.id,
     });
@@ -287,12 +300,27 @@ function doNextMatch() {
   rebuildHits();
 }
 
+/** True when (x, y) is inside the scrollable tray band. */
+function inTrayBand(x, y) {
+  return y >= TRAY.y && y <= TRAY.y + TRAY.h && x >= 0 && x <= W;
+}
+
+/** Scroll the tray by dx px (positive = reveal items to the right). */
+function scrollTray(dx) {
+  if (trayScrollMax <= 0) return false;
+  const before = trayScroll;
+  trayScroll = clamp(trayScroll + dx, 0, trayScrollMax);
+  if (trayScroll !== before) rebuildHits();
+  return trayScroll !== before;
+}
+
 function handleTap(x, y) {
   if (state !== 'play') return;
 
   for (const h of hitCats) {
     if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) {
       categoryIndex = h.index;
+      trayScroll = 0;
       sfxClick();
       rebuildHits();
       return;
@@ -417,7 +445,8 @@ function drawLayeredOutfit(ctx, outfit, dx, dy, dw, dh, opts = {}) {
       const box = accessoryRect(layer.key, lookX, lookY, lookW, lookH);
       if (!box) continue;
       const fit = fitContain(layer.img.naturalWidth, layer.img.naturalHeight, box.w, box.h);
-      ctx.drawImage(layer.img, box.x + fit.x, box.y + fit.y, fit.w, fit.h);
+      const oy = anchorOffsetY(box.anchor, box.h, fit.h);
+      ctx.drawImage(layer.img, box.x + fit.x, box.y + oy, fit.w, fit.h);
     } else {
       // Backgrounds (when drawn as a layer) — cover the box
       ctx.drawImage(layer.img, 0, 0, layer.img.naturalWidth, layer.img.naturalHeight, 0, 0, dw, dh);
@@ -528,6 +557,25 @@ function drawBgOnly(ctx, outfit) {
   }
 }
 
+/** A small chevron cue at a tray edge. dir -1 = points left, 1 = points right. */
+function drawTrayScrollHint(ctx, x, y, dir) {
+  ctx.save();
+  const g = ctx.createLinearGradient(x - dir * 22, 0, x, 0);
+  g.addColorStop(0, 'rgba(0,20,35,0)');
+  g.addColorStop(1, 'rgba(0,20,35,0.55)');
+  ctx.fillStyle = g;
+  ctx.fillRect(dir < 0 ? x : x - 22, TRAY.y, 22, TRAY.h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - dir * 5, y - 7);
+  ctx.lineTo(x + dir * 4, y);
+  ctx.lineTo(x - dir * 5, y + 7);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawPlayChrome(ctx) {
   // Category tabs
   CATEGORIES.forEach((cat, i) => {
@@ -554,6 +602,11 @@ function drawPlayChrome(ctx) {
   ctx.fillStyle = 'rgba(0, 30, 50, 0.55)';
   roundRect(ctx, 6, 452, W - 12, 112, 16);
   ctx.fill();
+
+  // Clip tray contents to the viewport so scrolled-off cells don't spill out.
+  ctx.save();
+  roundRect(ctx, TRAY.x - 2, 452, TRAY.w + 4, 112, 14);
+  ctx.clip();
 
   // Tray items — image + name stacked tightly (no giant empty gap)
   for (const h of hitTray) {
@@ -625,6 +678,15 @@ function drawPlayChrome(ctx) {
     let label = h.item.label;
     if (h.w < 42 && label.length > 5) label = label.slice(0, 4) + '…';
     ctx.fillText(label, h.x + h.w / 2, groupY + th + 2 + labelH / 2);
+  }
+
+  ctx.restore(); // end tray clip
+
+  // Scroll affordance — soft edge fades + chevrons when there is more to see.
+  if (trayScrollMax > 0) {
+    const midY = TRAY.y + TRAY.h / 2;
+    if (trayScroll > 1) drawTrayScrollHint(ctx, TRAY.x + 2, midY, -1);
+    if (trayScroll < trayScrollMax - 1) drawTrayScrollHint(ctx, TRAY.x + TRAY.w - 2, midY, 1);
   }
 
   // Action buttons

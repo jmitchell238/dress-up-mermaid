@@ -62,15 +62,18 @@ function loadGame() {
       LAYER_ORDER, ACCESSORY_LAYOUT,
       outfitsEqual, isValidItem, normalizeOutfit, resolveEquip, randomOutfit,
       findItem, itemForOutfit, resolveLayers, allLayerSrcs, fitContain, MERMAID_VIEW,
-      ACCESSORY_LAYOUT, LOOK_CONTENT, accessoryRect,
+      ACCESSORY_LAYOUT, LOOK_CONTENT, accessoryRect, anchorOffsetY,
       equip, enterPlay, enterMenu, doSurprise, doFavorite, doShowOff,
       checkMatch, rebuildHits, handleTap,
+      TRAY, scrollTray, inTrayBand,
       state: () => state,
       modeId: () => modeId,
       matchTarget: () => matchTarget,
       matchDone: () => matchDone,
       sessionDress: () => sessionDress,
       categoryIndex: () => categoryIndex,
+      trayScroll: () => trayScroll,
+      trayScrollMax: () => trayScrollMax,
       hitButtons: () => hitButtons,
       hitTray: () => hitTray,
       hitCats: () => hitCats,
@@ -241,13 +244,88 @@ assert(G.LAYER_ORDER.includes('look'), 'has look');
 assert(G.ACCESSORY_LAYOUT.crown, 'crown layout');
 const layers = G.resolveLayers(G.DEFAULT_OUTFIT);
 assert(layers.some(l => l.key === 'look'), 'resolve includes look');
-// Crown sits on upper content (head), not bottom
+
+// ---- Accessory alignment ----
+// Boxes are computed against the character content box inside the drawn look
+// rect. Reference geometry mirrors MERMAID_VIEW (280×374) with a full-bleed look.
+section('accessory alignment');
 const cr = G.accessoryRect('crown', 0, 0, 280, 374);
 const neck = G.accessoryRect('jewelry', 0, 0, 280, 374);
 const hand = G.accessoryRect('prop', 0, 0, 280, 374);
-assert(cr && cr.y < 80, 'crown near top of character');
-assert(neck && neck.y > cr.y, 'gems below crown');
-assert(hand && hand.x > 120, 'hold item toward side hand');
+
+// content box for this reference rect
+const cbX = 280 * G.LOOK_CONTENT.x, cbY = 374 * G.LOOK_CONTENT.y;
+const cbW = 280 * G.LOOK_CONTENT.w, cbH = 374 * G.LOOK_CONTENT.h;
+const frac = (box) => ({
+  cx: (box.x + box.w / 2 - cbX) / cbW,
+  cy: (box.y + box.h / 2 - cbY) / cbH,
+});
+
+// Crown: horizontally centered on the head, seated at the very top, rising above it.
+assert(cr && cr.anchor === 'bottom', 'crown bottom-anchored (rests on head)');
+assert(Math.abs(frac(cr).cx - 0.5) < 0.06, 'crown horizontally centered on head');
+assert(cr.y < cbY, 'crown top rises above the content box');
+assert(frac(cr).cy < 0.12, 'crown sits in the top head band');
+
+// Gems: hang from the neck — top-anchored, centered, below the crown, above chest.
+assert(neck && neck.anchor === 'top', 'gems top-anchored (hang from neck)');
+assert(Math.abs(frac(neck).cx - 0.5) < 0.06, 'gems horizontally centered');
+assert(neck.y > cr.y + cr.h, 'gems below the crown');
+const nf = frac(neck).cy;
+assert(nf > 0.28 && nf < 0.5, 'gems seated at neck / upper chest');
+
+// Hold: centered prop toward her hand (viewer right), around mid-body height.
+assert(hand && hand.anchor === 'center', 'hold item center-anchored');
+assert(frac(hand).cx > 0.6, 'hold item toward side hand');
+const hf = frac(hand).cy;
+assert(hf > 0.5 && hf < 0.8, 'hold item around hand height');
+
+// anchorOffsetY seats art by anchor inside the box height.
+assertEq(G.anchorOffsetY('top', 100, 60), 0, 'top anchor offset');
+assertEq(G.anchorOffsetY('bottom', 100, 60), 40, 'bottom anchor offset');
+assertEq(G.anchorOffsetY('center', 100, 60), 20, 'center anchor offset');
+
+// ---- Tray horizontal scroll ----
+section('tray scroll');
+G.enterPlay('free');
+// Select the Mermaid category (many items) via its tab, like a real tap.
+const lookCat = G.hitCats().find((h, i) => G.CATEGORIES[i].id === 'look');
+G.handleTap(lookCat.x + lookCat.w / 2, lookCat.y + lookCat.h / 2);
+assertEq(G.CATEGORIES[G.categoryIndex()].id, 'look', 'switched to Mermaid tray');
+
+const looksN = G.LOOKS.length;
+assert(G.hitTray().length === looksN, 'every look gets a tray cell (no squashing)');
+// Fixed cell size — cells are NOT shrunk to fit the viewport.
+const cw0 = G.hitTray()[0].w;
+assert(cw0 >= G.TRAY.cell - 6, 'tray cells keep full fixed size');
+assert(looksN * G.TRAY.cell > G.TRAY.w, 'looks overflow the viewport');
+assert(G.trayScrollMax() > 0, 'overflowing tray is scrollable');
+
+// Scrolling shifts cells left and reveals later items.
+const firstX0 = G.hitTray()[0].x;
+const lastX0 = G.hitTray()[looksN - 1].x;
+assert(lastX0 > G.TRAY.w, 'last item initially off the right edge');
+G.scrollTray(120);
+assert(G.trayScroll() > 0, 'scroll advances offset');
+assert(G.hitTray()[0].x < firstX0, 'cells move left when scrolled');
+assert(G.hitTray()[looksN - 1].x < lastX0, 'later items brought into view');
+
+// Clamp: cannot scroll past the ends.
+G.scrollTray(99999);
+assertEq(G.trayScroll(), G.trayScrollMax(), 'scroll clamps at the right end');
+G.scrollTray(-99999);
+assertEq(G.trayScroll(), 0, 'scroll clamps at the left end');
+assert(!G.scrollTray(-10), 'no-op scroll at the edge returns false');
+
+// A short category (Scene = 5) fits without scrolling and stays centered.
+const sceneCat = G.hitCats().find((h, i) => G.CATEGORIES[i].id === 'bg');
+G.handleTap(sceneCat.x + sceneCat.w / 2, sceneCat.y + sceneCat.h / 2);
+assertEq(G.trayScroll(), 0, 'switching category resets scroll');
+assertEq(G.trayScrollMax(), 0, 'small category is not scrollable');
+
+// Tray band hit test matches TRAY geometry.
+assert(G.inTrayBand(G.W / 2, G.TRAY.y + 5), 'point inside tray band');
+assert(!G.inTrayBand(G.W / 2, G.TRAY.y - 40), 'point above tray band excluded');
 
 console.log('\n\n' + passed + ' passed, ' + failed + ' failed');
 if (failures.length) {

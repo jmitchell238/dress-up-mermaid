@@ -75,19 +75,25 @@ const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
 /**
  * Accessory placement as fractions of the character content box.
  * prop = handheld item near her side (she holds it).
+ *
+ * `anchor` controls how the contain-fit art is seated vertically inside the
+ * box, so crowns of different heights all rest on the head and necklaces of
+ * different heights all hang from the neck:
+ *   'bottom' — art base sits at box bottom (crowns rest on the hair)
+ *   'top'    — art top sits at box top    (necklaces hang from the neck)
+ *   'center' — art centered in the box    (handheld props)
+ * Tuned visually against the gold-teal reference character (see
+ * docs/ARCHITECTURE.md → "Accessory alignment").
  */
 const ACCESSORY_LAYOUT = {
-  // Sits on top of head / hair (y may be slightly negative = above content box)
-  crown:   { x: 0.26, y: -0.04, w: 0.48, h: 0.13 },
-  // Open U-necklace at the neck (below chin, above shell top)
-  jewelry: { x: 0.30, y: 0.29, w: 0.40, h: 0.11 },
-  // Held item near her hand (viewer's right / her left)
-  prop:    { x: 0.66, y: 0.42, w: 0.32, h: 0.28 },
+  crown:   { x: 0.30,  y: -0.09, w: 0.40, h: 0.17, anchor: 'bottom' },
+  jewelry: { x: 0.365, y: 0.30,  w: 0.27, h: 0.13, anchor: 'top' },
+  prop:    { x: 0.55,  y: 0.46,  w: 0.40, h: 0.34, anchor: 'center' },
 };
 
 /**
  * Map accessory layout into the drawn look rectangle (after contain-fit).
- * @returns {{ x: number, y: number, w: number, h: number }}
+ * @returns {{ x: number, y: number, w: number, h: number, anchor: string }}
  */
 function accessoryRect(key, lookX, lookY, lookW, lookH) {
   const layout = ACCESSORY_LAYOUT[key];
@@ -101,5 +107,13 @@ function accessoryRect(key, lookX, lookY, lookW, lookH) {
     y: cy + ch * layout.y,
     w: cw * layout.w,
     h: ch * layout.h,
+    anchor: layout.anchor || 'center',
   };
+}
+
+/** Vertical offset for contain-fit art seated in an accessory box by anchor. */
+function anchorOffsetY(anchor, boxH, fitH) {
+  if (anchor === 'bottom') return boxH - fitH;
+  if (anchor === 'top') return 0;
+  return (boxH - fitH) / 2;
 }

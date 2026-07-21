@@ -5,6 +5,12 @@ let ctx = null;
 let last = performance.now();
 let activePointerId = null;
 
+/** Pointer gesture tracking (tap vs. horizontal swipe on the tray). */
+let downX = 0, downY = 0, lastX = 0;
+let dragging = false;
+let downInTray = false;
+const DRAG_THRESHOLD = 8; // px of movement before a press becomes a swipe
+
 function resizeCanvas() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -90,13 +96,35 @@ function onPointerDown(e) {
   activePointerId = e.pointerId;
   try { cv.setPointerCapture(e.pointerId); } catch { /* */ }
   const { x, y } = eventToStage(e);
-  handleTap(x, y);
+  downX = lastX = x;
+  downY = y;
+  dragging = false;
+  downInTray = inTrayBand(x, y);
   e.preventDefault();
+}
+
+function onPointerMove(e) {
+  if (e.pointerId !== activePointerId) return;
+  const { x, y } = eventToStage(e);
+  if (!dragging && Math.abs(x - downX) > DRAG_THRESHOLD &&
+      Math.abs(x - downX) > Math.abs(y - downY)) {
+    dragging = true; // horizontal swipe wins over a tap
+  }
+  if (dragging && downInTray) {
+    scrollTray(lastX - x); // drag left → reveal items to the right
+    lastX = x;
+    e.preventDefault();
+  }
 }
 
 function onPointerUp(e) {
   if (e.pointerId !== activePointerId) return;
   activePointerId = null;
+  if (!dragging) {
+    const { x, y } = eventToStage(e);
+    handleTap(x, y);
+  }
+  dragging = false;
   e.preventDefault();
 }
 
@@ -136,6 +164,7 @@ function wireUi() {
   });
 
   cv.addEventListener('pointerdown', onPointerDown, { passive: false });
+  cv.addEventListener('pointermove', onPointerMove, { passive: false });
   cv.addEventListener('pointerup', onPointerUp, { passive: false });
   cv.addEventListener('pointercancel', onPointerUp, { passive: false });
   cv.addEventListener('touchstart', e => {
