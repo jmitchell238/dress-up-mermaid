@@ -1,7 +1,7 @@
 'use strict';
 
 // Mermaid Dress-Up — Keep CACHE in sw.js in sync: 'dress-up-mermaid-' + GAME_VERSION
-const GAME_VERSION = '1.0.006';
+const GAME_VERSION = '1.0.007';
 const GAME_VERSION_LABEL = 'v' + GAME_VERSION;
 const GAME_NAME = 'Mermaid Dress-Up';
 
@@ -49,19 +49,22 @@ const BACKGROUNDS = [
  * scripts/measure-centerline.mjs; see docs/ARCHITECTURE.md → "Accessory alignment".
  */
 const LOOKS = [
-  { id: 'gold-teal',      label: 'Gold',     src: 'art/layers/look/gold-teal.png',      swatch: '#F5D76E', headX: 0.536, neckX: 0.540 },
-  { id: 'pink-sparkle',   label: 'Pink',     src: 'art/layers/look/pink-sparkle.png',   swatch: '#F48FB1', headX: 0.539, neckX: 0.554 },
-  { id: 'purple-night',   label: 'Purple',   src: 'art/layers/look/purple-night.png',   swatch: '#CE93D8', headX: 0.538, neckX: 0.545 },
-  { id: 'teal-braid',     label: 'Teal',     src: 'art/layers/look/teal-braid.png',     swatch: '#4DB6AC', headX: 0.537, neckX: 0.516 },
-  { id: 'ruby-sunset',    label: 'Ruby',     src: 'art/layers/look/ruby-sunset.png',    swatch: '#EF5350', headX: 0.537, neckX: 0.539 },
-  { id: 'silver-ice',     label: 'Silver',   src: 'art/layers/look/silver-ice.png',     swatch: '#E0E0E0', headX: 0.537, neckX: 0.539 },
-  { id: 'rainbow',        label: 'Rainbow',  src: 'art/layers/look/rainbow.png',        swatch: '#FF7043', headX: 0.567, neckX: 0.559 },
-  { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91', headX: 0.536, neckX: 0.540 },
-  { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A', headX: 0.539, neckX: 0.531 },
-  { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB', headX: 0.536, neckX: 0.540 },
+  // Color looks share the same base linework (identical bounds): head axis
+  // ~0.537, torso/neck axis ~0.552 (she's drawn with a slight rightward twist).
+  { id: 'gold-teal',      label: 'Gold',     src: 'art/layers/look/gold-teal.png',      swatch: '#F5D76E', headX: 0.537, neckX: 0.552 },
+  { id: 'pink-sparkle',   label: 'Pink',     src: 'art/layers/look/pink-sparkle.png',   swatch: '#F48FB1', headX: 0.537, neckX: 0.552 },
+  { id: 'purple-night',   label: 'Purple',   src: 'art/layers/look/purple-night.png',   swatch: '#CE93D8', headX: 0.537, neckX: 0.552 },
+  { id: 'teal-braid',     label: 'Teal',     src: 'art/layers/look/teal-braid.png',     swatch: '#4DB6AC', headX: 0.537, neckX: 0.552 },
+  { id: 'ruby-sunset',    label: 'Ruby',     src: 'art/layers/look/ruby-sunset.png',    swatch: '#EF5350', headX: 0.537, neckX: 0.552 },
+  { id: 'silver-ice',     label: 'Silver',   src: 'art/layers/look/silver-ice.png',     swatch: '#E0E0E0', headX: 0.537, neckX: 0.552 },
+  { id: 'rainbow',        label: 'Rainbow',  src: 'art/layers/look/rainbow.png',        swatch: '#FF7043', headX: 0.537, neckX: 0.552 },
+  { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91', headX: 0.537, neckX: 0.552 },
+  { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A', headX: 0.537, neckX: 0.552 },
+  { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB', headX: 0.537, neckX: 0.552 },
+  // Poses are separate illustrations with their own turned bodies.
   { id: 'pose-wave',      label: 'Wave',     src: 'art/layers/look/pose-wave.png',      swatch: '#81D4FA', headX: 0.465, neckX: 0.482 },
   { id: 'pose-side',      label: 'Side',     src: 'art/layers/look/pose-side.png',      swatch: '#CE93D8', headX: 0.471, neckX: 0.451 },
-  { id: 'pose-swim',      label: 'Swim',     src: 'art/layers/look/pose-swim.png',      swatch: '#4DB6AC', headX: 0.473, neckX: 0.532 },
+  { id: 'pose-swim',      label: 'Swim',     src: 'art/layers/look/pose-swim.png',      swatch: '#4DB6AC', headX: 0.473, neckX: 0.500 },
 ];
 
 /** Fallback head/neck axis for a look that has no measured center. */

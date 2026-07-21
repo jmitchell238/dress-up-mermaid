@@ -88,7 +88,8 @@ const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
 const ACCESSORY_LAYOUT = {
   crown:   { x: 0.30,  y: -0.05, w: 0.40, h: 0.17, anchor: 'bottom' },
   jewelry: { x: 0.365, y: 0.34,  w: 0.27, h: 0.13, anchor: 'top' },
-  prop:    { x: 0.55,  y: 0.46,  w: 0.40, h: 0.34, anchor: 'center' },
+  // Held item — seated by her lowered right hand (viewer's right).
+  prop:    { x: 0.60,  y: 0.52,  w: 0.34, h: 0.34, anchor: 'center' },
 };
 
 /** Resolve a look's head/neck axis, falling back to the default. */
