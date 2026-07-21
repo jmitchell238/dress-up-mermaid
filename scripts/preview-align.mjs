@@ -15,11 +15,22 @@
  */
 import { decode, makeCanvas, drawImage, fitContain, encode } from './lib-png.mjs';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import path from 'path';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [look = 'gold-teal', crown = 'crystal', jewelry = 'shell-choker',
        prop = 'mirror', out = 'preview-align.png'] = process.argv.slice(2);
+
+/** Pull this look's head/neck axis straight from config.js so it stays accurate. */
+function lookCenters(id) {
+  const cfg = fs.readFileSync(`${ROOT}/js/config.js`, 'utf8');
+  const line = cfg.split('\n').find(l => l.includes(`id: '${id}'`) && l.includes('headX'));
+  const hx = line && line.match(/headX:\s*([\d.]+)/);
+  const nx = line && line.match(/neckX:\s*([\d.]+)/);
+  return { headX: hx ? +hx[1] : 0.538, neckX: nx ? +nx[1] : 0.540 };
+}
+const CENTERS = lookCenters(look);
 
 // Keep in sync with js/assets.js
 const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
@@ -32,7 +43,12 @@ function accessoryRect(key, lx, ly, lw, lh) {
   const l = ACCESSORY_LAYOUT[key];
   const cx = lx + lw * LOOK_CONTENT.x, cy = ly + lh * LOOK_CONTENT.y;
   const cw = lw * LOOK_CONTENT.w, ch = lh * LOOK_CONTENT.h;
-  return { x: cx + cw * l.x, y: cy + ch * l.y, w: cw * l.w, h: ch * l.h, anchor: l.anchor };
+  const w = cw * l.w, h = ch * l.h;
+  let x;
+  if (key === 'crown') x = lx + lw * CENTERS.headX - w / 2;
+  else if (key === 'jewelry') x = lx + lw * CENTERS.neckX - w / 2;
+  else x = cx + cw * l.x;
+  return { x, y: cy + ch * l.y, w, h, anchor: l.anchor };
 }
 function anchorOffsetY(anchor, boxH, fitH) {
   if (anchor === 'bottom') return boxH - fitH;

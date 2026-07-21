@@ -64,6 +64,15 @@ its box (so crowns/necklaces of different heights all land correctly):
 - `jewelry` — `anchor: 'top'`: the necklace hangs down from the neck.
 - `prop` — `anchor: 'center'`: the handheld item sits by her hand.
 
+**Horizontal centering is per-look, not per-box.** The content-box *center* is
+not where the head/neck sit: billowing hair and a curling tail pull the bounding
+box sideways (e.g. the head axis is ~0.537 of art width while the box center is
+~0.50). So each look carries a measured `headX` / `neckX` (fraction of art
+width) in `config.js`; `accessoryRect` centers the **crown on `headX`** and the
+**gems on `neckX`**, using `ACCESSORY_LAYOUT.x` only as a fallback and for the
+`prop` (which tracks her hand, not the centerline). Re-measure with
+`node scripts/measure-centerline.mjs art/layers/look/*.png` if art changes.
+
 `accessoryRect` maps a layout into a pixel box within the drawn look rect;
 `anchorOffsetY` computes the vertical seat. **These values were tuned visually**
 using `scripts/preview-align.mjs` — a headless PNG compositor that mirrors the

@@ -91,24 +91,43 @@ const ACCESSORY_LAYOUT = {
   prop:    { x: 0.55,  y: 0.46,  w: 0.40, h: 0.34, anchor: 'center' },
 };
 
+/** Resolve a look's head/neck axis, falling back to the default. */
+function lookCenters(lookItem) {
+  return {
+    headX: (lookItem && lookItem.headX != null) ? lookItem.headX : LOOK_CENTER_DEFAULT.headX,
+    neckX: (lookItem && lookItem.neckX != null) ? lookItem.neckX : LOOK_CENTER_DEFAULT.neckX,
+  };
+}
+
 /**
  * Map accessory layout into the drawn look rectangle (after contain-fit).
+ *
+ * Vertical (y, h) and prop horizontal come from ACCESSORY_LAYOUT (content-box
+ * fractions). Crown & gems are centered horizontally on the character's true
+ * head / neck axis (`centers`, full-art-width fractions) instead of the box
+ * center, so hair/tail can't drag them sideways.
  * @returns {{ x: number, y: number, w: number, h: number, anchor: string }}
  */
-function accessoryRect(key, lookX, lookY, lookW, lookH) {
+function accessoryRect(key, lookX, lookY, lookW, lookH, centers) {
   const layout = ACCESSORY_LAYOUT[key];
   if (!layout) return null;
   const cx = lookX + lookW * LOOK_CONTENT.x;
   const cy = lookY + lookH * LOOK_CONTENT.y;
   const cw = lookW * LOOK_CONTENT.w;
   const ch = lookH * LOOK_CONTENT.h;
-  return {
-    x: cx + cw * layout.x,
-    y: cy + ch * layout.y,
-    w: cw * layout.w,
-    h: ch * layout.h,
-    anchor: layout.anchor || 'center',
-  };
+  const w = cw * layout.w;
+  const h = ch * layout.h;
+
+  let x;
+  if (key === 'crown' && centers && centers.headX != null) {
+    x = lookX + lookW * centers.headX - w / 2;
+  } else if (key === 'jewelry' && centers && centers.neckX != null) {
+    x = lookX + lookW * centers.neckX - w / 2;
+  } else {
+    x = cx + cw * layout.x; // prop (held at the hand) stays box-relative
+  }
+
+  return { x, y: cy + ch * layout.y, w, h, anchor: layout.anchor || 'center' };
 }
 
 /** Vertical offset for contain-fit art seated in an accessory box by anchor. */

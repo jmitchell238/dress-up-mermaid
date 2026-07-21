@@ -63,6 +63,7 @@ function loadGame() {
       outfitsEqual, isValidItem, normalizeOutfit, resolveEquip, randomOutfit,
       findItem, itemForOutfit, resolveLayers, allLayerSrcs, fitContain, MERMAID_VIEW,
       ACCESSORY_LAYOUT, LOOK_CONTENT, accessoryRect, anchorOffsetY,
+      lookCenters, LOOK_CENTER_DEFAULT,
       equip, enterPlay, enterMenu, doSurprise, doFavorite, doShowOff,
       checkMatch, rebuildHits, handleTap,
       TRAY, scrollTray, inTrayBand,
@@ -249,9 +250,13 @@ assert(layers.some(l => l.key === 'look'), 'resolve includes look');
 // Boxes are computed against the character content box inside the drawn look
 // rect. Reference geometry mirrors MERMAID_VIEW (280×374) with a full-bleed look.
 section('accessory alignment');
-const cr = G.accessoryRect('crown', 0, 0, 280, 374);
-const neck = G.accessoryRect('jewelry', 0, 0, 280, 374);
-const hand = G.accessoryRect('prop', 0, 0, 280, 374);
+// Crown & gems center on the look's true head/neck axis (full-art-width
+// fractions), not the bbox center. Use a reference look with known centers.
+const rubyLook = G.LOOKS.find(l => l.id === 'ruby-sunset');
+const centers = G.lookCenters(rubyLook);
+const cr = G.accessoryRect('crown', 0, 0, 280, 374, centers);
+const neck = G.accessoryRect('jewelry', 0, 0, 280, 374, centers);
+const hand = G.accessoryRect('prop', 0, 0, 280, 374, centers);
 
 // content box for this reference rect
 const cbX = 280 * G.LOOK_CONTENT.x, cbY = 374 * G.LOOK_CONTENT.y;
@@ -260,19 +265,29 @@ const frac = (box) => ({
   cx: (box.x + box.w / 2 - cbX) / cbW,
   cy: (box.y + box.h / 2 - cbY) / cbH,
 });
+// Every look carries a measured head/neck axis, biased right of the bbox center.
+assert(G.LOOKS.every(l => l.headX != null && l.neckX != null), 'looks carry head/neck axis');
+assert(rubyLook.headX > 0.51 && rubyLook.neckX > 0.51, 'axis sits right of bbox center');
 
-// Crown: horizontally centered on the head, seated at the very top, rising above it.
+// Crown: centered exactly on the head axis (regression: NOT at bbox center 0.5).
 assert(cr && cr.anchor === 'bottom', 'crown bottom-anchored (rests on head)');
-assert(Math.abs(frac(cr).cx - 0.5) < 0.06, 'crown horizontally centered on head');
+assert(Math.abs((cr.x + cr.w / 2) - 280 * centers.headX) < 0.5, 'crown centered on head axis');
+assert(frac(cr).cx > 0.52, 'crown pushed right of bbox center (fixes left drift)');
 assert(cr.y < cbY, 'crown top rises above the content box');
 assert(frac(cr).cy < 0.12, 'crown sits in the top head band');
 
-// Gems: hang from the neck — top-anchored, centered, below the crown, above chest.
+// Gems: centered on the neck axis, top-anchored, below the crown, at the neck.
 assert(neck && neck.anchor === 'top', 'gems top-anchored (hang from neck)');
-assert(Math.abs(frac(neck).cx - 0.5) < 0.06, 'gems horizontally centered');
+assert(Math.abs((neck.x + neck.w / 2) - 280 * centers.neckX) < 0.5, 'gems centered on neck axis');
+assert(frac(neck).cx > 0.52, 'gems pushed right of bbox center (fixes left drift)');
 assert(neck.y > cr.y + cr.h, 'gems below the crown');
 const nf = frac(neck).cy;
-assert(nf > 0.28 && nf < 0.5, 'gems seated at neck / upper chest');
+assert(nf > 0.30 && nf < 0.55, 'gems seated at neck / upper chest');
+
+// A look with no measured center falls back to the default axis.
+const dflt = G.lookCenters({ id: 'x' });
+assertEq(dflt.headX, G.LOOK_CENTER_DEFAULT.headX, 'missing headX falls back');
+assertEq(dflt.neckX, G.LOOK_CENTER_DEFAULT.neckX, 'missing neckX falls back');
 
 // Hold: centered prop toward her hand (viewer right), around mid-body height.
 assert(hand && hand.anchor === 'center', 'hold item center-anchored');

@@ -423,6 +423,7 @@ function drawLayeredOutfit(ctx, outfit, dx, dy, dw, dh, opts = {}) {
   let lookW = dw;
   let lookH = dh;
 
+  const centers = lookCenters(findItem(LOOKS, outfit.look));
   const lookLayer = layers.find(l => l.key === 'look');
   if (lookLayer && lookLayer.img && lookLayer.img.complete && lookLayer.img.naturalWidth) {
     const iw = lookLayer.img.naturalWidth || LAYER_W;
@@ -442,7 +443,7 @@ function drawLayeredOutfit(ctx, outfit, dx, dy, dw, dh, opts = {}) {
     if (!(layer.img && layer.img.complete && layer.img.naturalWidth)) continue;
 
     if (layer.key === 'crown' || layer.key === 'jewelry' || layer.key === 'prop') {
-      const box = accessoryRect(layer.key, lookX, lookY, lookW, lookH);
+      const box = accessoryRect(layer.key, lookX, lookY, lookW, lookH, centers);
       if (!box) continue;
       const fit = fitContain(layer.img.naturalWidth, layer.img.naturalHeight, box.w, box.h);
       const oy = anchorOffsetY(box.anchor, box.h, fit.h);
