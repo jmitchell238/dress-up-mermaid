@@ -74,7 +74,7 @@ const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
 
 /**
  * Accessory placement as fractions of the character content box.
- * prop = handheld item near her side (she holds it).
+ * prop = handheld item (grip centers on handX/handY when set).
  *
  * `anchor` controls how the contain-fit art is seated vertically inside the
  * box, so crowns of different heights all rest on the head and necklaces of
@@ -85,45 +85,42 @@ const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
  * Tuned visually against the gold-teal reference character (see
  * docs/ARCHITECTURE.md → "Accessory alignment").
  *
- * Jewelry art is authored as shallow front-facing arcs (not full U-loops) so
- * only the worn front of the necklace shows. The jewelry box is wider than
- * tall to match that aspect.
+ * Crown art is front-facing only (no wrap-around back band). Jewelry is a
+ * shallow front arc (chain + pendant), drawn small at the collarbone.
  */
 const ACCESSORY_LAYOUT = {
-  // Slightly nested into the hairline so the band doesn't float above the head.
-  crown:   { x: 0.30,  y: -0.03, w: 0.38, h: 0.16, anchor: 'bottom' },
-  // Wide shallow box for front-arc necklaces (collarbone, not ear-to-ear loop).
-  jewelry: { x: 0.365, y: 0.355, w: 0.30, h: 0.11, anchor: 'top' },
-  // Held item — seated by her lowered right hand (viewer's right).
-  prop:    { x: 0.60,  y: 0.52,  w: 0.34, h: 0.34, anchor: 'center' },
+  // Compact front tiara nested into the hairline (not a floating halo).
+  crown:   { x: 0.30,  y: -0.01, w: 0.34, h: 0.13, anchor: 'bottom' },
+  // Small collarbone necklace — not a chest-filling medallion.
+  jewelry: { x: 0.365, y: 0.36,  w: 0.20, h: 0.075, anchor: 'top' },
+  // Hold item — palm-sized toy; grip centers on handX/handY.
+  prop:    { x: 0.72,  y: 0.44,  w: 0.18, h: 0.18, anchor: 'center' },
 };
 
 /**
- * Resolve a look's head/neck axis, falling back to the default.
- * headX/neckX = fraction of full art width.
- * headY/neckY = optional fraction of full art height (crown rest line / jewelry top).
- * When omitted, ACCESSORY_LAYOUT content-box fractions are used (gold-teal frame).
+ * Resolve a look's accessory axes, falling back to defaults.
+ * headX/neckX/handX = fraction of full art width.
+ * headY/neckY/handY = optional fraction of full art height.
+ * When vertical pins are omitted, ACCESSORY_LAYOUT content-box fractions apply.
  */
 function lookCenters(lookItem) {
   return {
     headX: (lookItem && lookItem.headX != null) ? lookItem.headX : LOOK_CENTER_DEFAULT.headX,
     neckX: (lookItem && lookItem.neckX != null) ? lookItem.neckX : LOOK_CENTER_DEFAULT.neckX,
+    handX: (lookItem && lookItem.handX != null) ? lookItem.handX : LOOK_CENTER_DEFAULT.handX,
     headY: (lookItem && lookItem.headY != null) ? lookItem.headY : null,
     neckY: (lookItem && lookItem.neckY != null) ? lookItem.neckY : null,
+    handY: (lookItem && lookItem.handY != null) ? lookItem.handY : LOOK_CENTER_DEFAULT.handY,
   };
 }
 
 /**
  * Map accessory layout into the drawn look rectangle (after contain-fit).
  *
- * Vertical (y, h) and prop horizontal come from ACCESSORY_LAYOUT (content-box
- * fractions). Crown & gems are centered horizontally on the character's true
- * head / neck axis (`centers`, full-art-width fractions) instead of the box
- * center, so hair/tail can't drag them sideways.
+ * Crown & gems center on headX / neckX. Hold items center on handX / handY
+ * (full-art fractions) so the grip lands in her palm, not on the hip/tail.
  *
- * Poses whose framing differs from gold-teal may set `centers.headY` /
- * `centers.neckY` (fractions of full art height) to pin the crown rest line
- * and jewelry top to the real head/neck.
+ * Poses may also set headY / neckY when framing differs from gold-teal.
  * @returns {{ x: number, y: number, w: number, h: number, anchor: string }}
  */
 function accessoryRect(key, lookX, lookY, lookW, lookH, centers) {
@@ -141,18 +138,22 @@ function accessoryRect(key, lookX, lookY, lookW, lookH, centers) {
     x = lookX + lookW * centers.headX - w / 2;
   } else if (key === 'jewelry' && centers && centers.neckX != null) {
     x = lookX + lookW * centers.neckX - w / 2;
+  } else if (key === 'prop' && centers && centers.handX != null) {
+    x = lookX + lookW * centers.handX - w / 2;
   } else {
-    x = cx + cw * layout.x; // prop (held at the hand) stays box-relative
+    x = cx + cw * layout.x;
   }
 
   let y = cy + ch * layout.y;
-  // Optional per-look vertical pins (full-art-height fractions).
   if (key === 'crown' && centers && centers.headY != null) {
     // Bottom of the crown box rests on the head/hairline.
     y = lookY + lookH * centers.headY - h;
   } else if (key === 'jewelry' && centers && centers.neckY != null) {
     // Top of the jewelry box sits at the neck / collarbone.
     y = lookY + lookH * centers.neckY;
+  } else if (key === 'prop' && centers && centers.handY != null) {
+    // Center of the hold box sits on the hand grip.
+    y = lookY + lookH * centers.handY - h / 2;
   }
 
   return { x, y, w, h, anchor: layout.anchor || 'center' };

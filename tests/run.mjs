@@ -301,11 +301,14 @@ assert(Math.abs((sideCr.y + sideCr.h) - 374 * sideC.headY) < 0.5, 'pose crown re
 assert(Math.abs(sideJew.y - 374 * sideC.neckY) < 0.5, 'pose jewelry top on neckY');
 assert(sideJew.y > sideCr.y + sideCr.h, 'pose gems still below crown');
 
-// Hold: centered prop toward her hand (viewer right), around mid-body height.
+// Hold: centered on the look's hand grip (full-art handX/handY), not the hip.
 assert(hand && hand.anchor === 'center', 'hold item center-anchored');
-assert(frac(hand).cx > 0.6, 'hold item toward side hand');
+assert(centers.handX != null && centers.handY != null, 'look centers expose hand grip');
+assert(Math.abs((hand.x + hand.w / 2) - 280 * centers.handX) < 0.5, 'hold centered on handX');
+assert(Math.abs((hand.y + hand.h / 2) - 374 * centers.handY) < 0.5, 'hold centered on handY');
+assert(frac(hand).cx > 0.75, 'hold item toward outer hand (viewer right on color looks)');
 const hf = frac(hand).cy;
-assert(hf > 0.5 && hf < 0.8, 'hold item around hand height');
+assert(hf > 0.40 && hf < 0.70, 'hold item around hand height (not hip/tail)');
 
 // anchorOffsetY seats art by anchor inside the box height.
 assertEq(G.anchorOffsetY('top', 100, 60), 0, 'top anchor offset');

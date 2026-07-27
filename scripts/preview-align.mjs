@@ -22,10 +22,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [look = 'gold-teal', crown = 'crystal', jewelry = 'shell-choker',
        prop = 'mirror', out = 'preview-align.png'] = process.argv.slice(2);
 
-/** Pull this look's head/neck axis (and optional vertical pins) from config.js. */
+/** Pull this look's axes from config.js. */
 function lookCenters(id) {
   const cfg = fs.readFileSync(`${ROOT}/js/config.js`, 'utf8');
-  // Match the full LOOKS entry for this id (may span multiple lines).
   const re = new RegExp(`id:\\s*'${id}'[\\s\\S]*?(?=\\n\\s*\\{ id:|\\n\\];)`, 'm');
   const block = cfg.match(re)?.[0] || '';
   const num = (key) => {
@@ -35,8 +34,10 @@ function lookCenters(id) {
   return {
     headX: num('headX') ?? 0.538,
     neckX: num('neckX') ?? 0.540,
+    handX: num('handX') ?? 0.84,
     headY: num('headY'),
     neckY: num('neckY'),
+    handY: num('handY') ?? 0.53,
   };
 }
 const CENTERS = lookCenters(look);
@@ -44,9 +45,9 @@ const CENTERS = lookCenters(look);
 // Keep in sync with js/assets.js
 const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
 const ACCESSORY_LAYOUT = {
-  crown:   { x: 0.30,  y: -0.03, w: 0.38, h: 0.16, anchor: 'bottom' },
-  jewelry: { x: 0.365, y: 0.355, w: 0.30, h: 0.11, anchor: 'top' },
-  prop:    { x: 0.60,  y: 0.52,  w: 0.34, h: 0.34, anchor: 'center' },
+  crown:   { x: 0.30,  y: -0.01, w: 0.34, h: 0.13, anchor: 'bottom' },
+  jewelry: { x: 0.365, y: 0.36,  w: 0.20, h: 0.075, anchor: 'top' },
+  prop:    { x: 0.72,  y: 0.44,  w: 0.18, h: 0.18, anchor: 'center' },
 };
 function accessoryRect(key, lx, ly, lw, lh) {
   const l = ACCESSORY_LAYOUT[key];
@@ -56,10 +57,12 @@ function accessoryRect(key, lx, ly, lw, lh) {
   let x;
   if (key === 'crown') x = lx + lw * CENTERS.headX - w / 2;
   else if (key === 'jewelry') x = lx + lw * CENTERS.neckX - w / 2;
+  else if (key === 'prop') x = lx + lw * CENTERS.handX - w / 2;
   else x = cx + cw * l.x;
   let y = cy + ch * l.y;
   if (key === 'crown' && CENTERS.headY != null) y = ly + lh * CENTERS.headY - h;
   else if (key === 'jewelry' && CENTERS.neckY != null) y = ly + lh * CENTERS.neckY;
+  else if (key === 'prop' && CENTERS.handY != null) y = ly + lh * CENTERS.handY - h / 2;
   return { x, y, w, h, anchor: l.anchor };
 }
 function anchorOffsetY(anchor, boxH, fitH) {
