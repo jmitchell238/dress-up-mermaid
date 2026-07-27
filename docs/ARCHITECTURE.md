@@ -84,14 +84,20 @@ node scripts/preview-align.mjs <look> <crown> <jewelry> <prop> [out.png]
 ```
 
 Because accessory art has different aspect ratios, always re-check the *hard*
-cases when tuning: tall crowns (`crystal`) and long pendant necklaces
+cases when tuning: tall crowns (`crystal`) and pendant necklaces
 (`shell-choker`, `gold-chain`, `gem-blue`), not just the choker/tiara. When
 re-tuning, change only the fractions/anchors in `ACCESSORY_LAYOUT` — the draw and
 hit code stay generic. Keep the `ACCESSORY_LAYOUT` copy in the script in sync.
 
-Because the fractions are relative to the gold-teal content box, poses whose art
-sits differently in the frame (`pose-*`) will align slightly less precisely; the
-common styles all share gold-teal's framing.
+**Jewelry art must be shallow front arcs**, not full U-loops. A closed or tall
+U shows the “back of the necklace” on the mermaid’s neck and reads as an overlay.
+Author/crop jewelry so only the worn front (collarbone crescent) is visible;
+ends stop at the sides of the neck, not climbing toward the ears.
+
+**Poses with different framing** set optional `headY` / `neckY` on the look
+(fractions of full art height). `accessoryRect` then pins the crown rest line
+and jewelry top to those values instead of the gold-teal content-box fractions.
+Color looks omit them and share gold-teal’s framing.
 
 ## Play-screen chrome + the item tray
 

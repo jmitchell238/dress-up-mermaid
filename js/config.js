@@ -1,7 +1,7 @@
 'use strict';
 
 // Mermaid Dress-Up — Keep CACHE in sw.js in sync: 'dress-up-mermaid-' + GAME_VERSION
-const GAME_VERSION = '1.0.007';
+const GAME_VERSION = '1.0.009';
 const GAME_VERSION_LABEL = 'v' + GAME_VERSION;
 const GAME_NAME = 'Mermaid Dress-Up';
 
@@ -47,6 +47,11 @@ const BACKGROUNDS = [
  * bounding-box center is biased sideways by billowing hair / a curling tail and
  * is NOT where the accessory belongs. Measured per look with
  * scripts/measure-centerline.mjs; see docs/ARCHITECTURE.md → "Accessory alignment".
+ *
+ * headY / neckY (optional) = fraction of full art height for the crown rest
+ * line (bottom of crown box) and jewelry top. Only needed when a look's framing
+ * differs from the gold-teal content box (pose-*). Color looks omit these and
+ * use ACCESSORY_LAYOUT content-box fractions.
  */
 const LOOKS = [
   // Color looks share the same base linework (identical bounds): head axis
@@ -61,10 +66,13 @@ const LOOKS = [
   { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91', headX: 0.537, neckX: 0.552 },
   { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A', headX: 0.537, neckX: 0.552 },
   { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB', headX: 0.537, neckX: 0.552 },
-  // Poses are separate illustrations with their own turned bodies.
-  { id: 'pose-wave',      label: 'Wave',     src: 'art/layers/look/pose-wave.png',      swatch: '#81D4FA', headX: 0.465, neckX: 0.482 },
-  { id: 'pose-side',      label: 'Side',     src: 'art/layers/look/pose-side.png',      swatch: '#CE93D8', headX: 0.471, neckX: 0.451 },
-  { id: 'pose-swim',      label: 'Swim',     src: 'art/layers/look/pose-swim.png',      swatch: '#4DB6AC', headX: 0.473, neckX: 0.500 },
+  // Poses: separate framing — pin crown rest / jewelry top with headY / neckY.
+  { id: 'pose-wave', label: 'Wave', src: 'art/layers/look/pose-wave.png', swatch: '#81D4FA',
+    headX: 0.465, neckX: 0.482, headY: 0.20, neckY: 0.385 },
+  { id: 'pose-side', label: 'Side', src: 'art/layers/look/pose-side.png', swatch: '#CE93D8',
+    headX: 0.471, neckX: 0.48, headY: 0.175, neckY: 0.30 },
+  { id: 'pose-swim', label: 'Swim', src: 'art/layers/look/pose-swim.png', swatch: '#4DB6AC',
+    headX: 0.473, neckX: 0.48, headY: 0.25, neckY: 0.355 },
 ];
 
 /** Fallback head/neck axis for a look that has no measured center. */
@@ -81,7 +89,7 @@ const CROWNS = [
   { id: 'flower-crown', label: 'Flower',  src: 'art/layers/crown/flower-crown.png', swatch: '#F48FB1' },
 ];
 
-/** Necklaces / jewelry (none = bare) — open U-necklaces, not bracelets */
+/** Necklaces / jewelry (none = bare) — shallow front-facing arcs (worn look) */
 const JEWELRY = [
   { id: 'none',         label: 'None',     src: null, swatch: '#90A4AE' },
   { id: 'pearls',       label: 'Pearls',   src: 'art/layers/jewelry/pearls.png',       swatch: '#FFF8E1' },

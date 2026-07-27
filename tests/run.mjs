@@ -288,6 +288,18 @@ assert(nf > 0.30 && nf < 0.55, 'gems seated at neck / upper chest');
 const dflt = G.lookCenters({ id: 'x' });
 assertEq(dflt.headX, G.LOOK_CENTER_DEFAULT.headX, 'missing headX falls back');
 assertEq(dflt.neckX, G.LOOK_CENTER_DEFAULT.neckX, 'missing neckX falls back');
+assertEq(dflt.headY, null, 'missing headY is null (use layout fractions)');
+assertEq(dflt.neckY, null, 'missing neckY is null (use layout fractions)');
+
+// Poses pin crown rest / jewelry top with full-art-height headY / neckY.
+const sideLook = G.LOOKS.find(l => l.id === 'pose-side');
+assert(sideLook && sideLook.headY != null && sideLook.neckY != null, 'pose-side has vertical pins');
+const sideC = G.lookCenters(sideLook);
+const sideCr = G.accessoryRect('crown', 0, 0, 280, 374, sideC);
+const sideJew = G.accessoryRect('jewelry', 0, 0, 280, 374, sideC);
+assert(Math.abs((sideCr.y + sideCr.h) - 374 * sideC.headY) < 0.5, 'pose crown rest on headY');
+assert(Math.abs(sideJew.y - 374 * sideC.neckY) < 0.5, 'pose jewelry top on neckY');
+assert(sideJew.y > sideCr.y + sideCr.h, 'pose gems still below crown');
 
 // Hold: centered prop toward her hand (viewer right), around mid-body height.
 assert(hand && hand.anchor === 'center', 'hold item center-anchored');
