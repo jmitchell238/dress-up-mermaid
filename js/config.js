@@ -1,7 +1,7 @@
 'use strict';
 
 // Mermaid Dress-Up — Keep CACHE in sw.js in sync: 'dress-up-mermaid-' + GAME_VERSION
-const GAME_VERSION = '1.0.010';
+const GAME_VERSION = '1.0.011';
 const GAME_VERSION_LABEL = 'v' + GAME_VERSION;
 const GAME_NAME = 'Mermaid Dress-Up';
 
@@ -52,31 +52,28 @@ const BACKGROUNDS = [
  */
 const LOOKS = [
   // Color looks share the same base linework: head ~0.537, neck ~0.552,
-  // right-hand palm ~0.84×0.53 (viewer's right — not the elbow/hip).
-  { id: 'gold-teal',      label: 'Gold',     src: 'art/layers/look/gold-teal.png',      swatch: '#F5D76E', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'pink-sparkle',   label: 'Pink',     src: 'art/layers/look/pink-sparkle.png',   swatch: '#F48FB1', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'purple-night',   label: 'Purple',   src: 'art/layers/look/purple-night.png',   swatch: '#CE93D8', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'teal-braid',     label: 'Teal',     src: 'art/layers/look/teal-braid.png',     swatch: '#4DB6AC', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'ruby-sunset',    label: 'Ruby',     src: 'art/layers/look/ruby-sunset.png',    swatch: '#EF5350', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'silver-ice',     label: 'Silver',   src: 'art/layers/look/silver-ice.png',     swatch: '#E0E0E0', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'rainbow',        label: 'Rainbow',  src: 'art/layers/look/rainbow.png',        swatch: '#FF7043', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
-  { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB', headX: 0.537, neckX: 0.552, handX: 0.84, handY: 0.53 },
+  // right-hand palm ~0.80×0.53 (viewer's right).
+  { id: 'gold-teal',      label: 'Gold',     src: 'art/layers/look/gold-teal.png',      swatch: '#F5D76E', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'pink-sparkle',   label: 'Pink',     src: 'art/layers/look/pink-sparkle.png',   swatch: '#F48FB1', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'purple-night',   label: 'Purple',   src: 'art/layers/look/purple-night.png',   swatch: '#CE93D8', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'teal-braid',     label: 'Teal',     src: 'art/layers/look/teal-braid.png',     swatch: '#4DB6AC', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'ruby-sunset',    label: 'Ruby',     src: 'art/layers/look/ruby-sunset.png',    swatch: '#EF5350', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'silver-ice',     label: 'Silver',   src: 'art/layers/look/silver-ice.png',     swatch: '#E0E0E0', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'rainbow',        label: 'Rainbow',  src: 'art/layers/look/rainbow.png',        swatch: '#FF7043', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'peach-coral',    label: 'Peach',    src: 'art/layers/look/peach-coral.png',    swatch: '#FFAB91', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'deep-emerald',   label: 'Emerald',  src: 'art/layers/look/deep-emerald.png',   swatch: '#66BB6A', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
+  { id: 'lavender-pearl', label: 'Lavender', src: 'art/layers/look/lavender-pearl.png', swatch: '#B39DDB', headX: 0.537, neckX: 0.552, handX: 0.81, handY: 0.545 },
   // Poses: separate framing — pin crown/jewelry/hand.
-  // Wave: right hand is raised; grip the lowered left hand.
   { id: 'pose-wave', label: 'Wave', src: 'art/layers/look/pose-wave.png', swatch: '#81D4FA',
-    headX: 0.465, neckX: 0.482, headY: 0.20, neckY: 0.385, handX: 0.24, handY: 0.50 },
-  // Side: hands near the shell top — seat hold by the outer right fingers.
+    headX: 0.465, neckX: 0.482, headY: 0.195, neckY: 0.39, handX: 0.26, handY: 0.51 },
   { id: 'pose-side', label: 'Side', src: 'art/layers/look/pose-side.png', swatch: '#CE93D8',
-    headX: 0.471, neckX: 0.48, headY: 0.175, neckY: 0.30, handX: 0.58, handY: 0.40 },
-  // Swim: left arm outstretched — grip at the extended hand.
+    headX: 0.471, neckX: 0.48, headY: 0.17, neckY: 0.305, handX: 0.55, handY: 0.39 },
   { id: 'pose-swim', label: 'Swim', src: 'art/layers/look/pose-swim.png', swatch: '#4DB6AC',
-    headX: 0.473, neckX: 0.48, headY: 0.25, neckY: 0.355, handX: 0.16, handY: 0.32 },
+    headX: 0.473, neckX: 0.48, headY: 0.245, neckY: 0.36, handX: 0.14, handY: 0.31 },
 ];
 
 /** Fallback axes for a look that has no measured centers. */
-const LOOK_CENTER_DEFAULT = { headX: 0.538, neckX: 0.540, handX: 0.84, handY: 0.53 };
+const LOOK_CENTER_DEFAULT = { headX: 0.538, neckX: 0.540, handX: 0.81, handY: 0.545 };
 
 /** Crowns / tiaras (none = bare) */
 const CROWNS = [

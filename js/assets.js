@@ -89,12 +89,12 @@ const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
  * shallow front arc (chain + pendant), drawn small at the collarbone.
  */
 const ACCESSORY_LAYOUT = {
-  // Compact front tiara nested into the hairline (not a floating halo).
-  crown:   { x: 0.30,  y: -0.01, w: 0.34, h: 0.13, anchor: 'bottom' },
-  // Small collarbone necklace — not a chest-filling medallion.
-  jewelry: { x: 0.365, y: 0.36,  w: 0.20, h: 0.075, anchor: 'top' },
-  // Hold item — palm-sized toy; grip centers on handX/handY.
-  prop:    { x: 0.72,  y: 0.44,  w: 0.18, h: 0.18, anchor: 'center' },
+  // Front-facing tiara: base sits in the hair (not a floating 3D ring).
+  crown:   { x: 0.30,  y: -0.02, w: 0.34, h: 0.11, anchor: 'bottom' },
+  // Delicate collarbone necklace — small, shallow arc.
+  jewelry: { x: 0.365, y: 0.385, w: 0.18, h: 0.055, anchor: 'top' },
+  // Palm-sized hold; grip is the BOTTOM of the prop (handle sits in the palm).
+  prop:    { x: 0.74,  y: 0.46,  w: 0.15, h: 0.18, anchor: 'bottom' },
 };
 
 /**
@@ -152,8 +152,8 @@ function accessoryRect(key, lookX, lookY, lookW, lookH, centers) {
     // Top of the jewelry box sits at the neck / collarbone.
     y = lookY + lookH * centers.neckY;
   } else if (key === 'prop' && centers && centers.handY != null) {
-    // Center of the hold box sits on the hand grip.
-    y = lookY + lookH * centers.handY - h / 2;
+    // Bottom of the hold box sits on the palm (handle / grip).
+    y = lookY + lookH * centers.handY - h;
   }
 
   return { x, y, w, h, anchor: layout.anchor || 'center' };
