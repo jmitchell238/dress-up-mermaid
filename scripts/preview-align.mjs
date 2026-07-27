@@ -2,16 +2,13 @@
 /**
  * Accessory-alignment preview — headless.
  *
- * Composites a look + crown + jewelry + prop using the SAME math the game uses
- * (js/assets.js ACCESSORY_LAYOUT / accessoryRect / anchorOffsetY, contain-fit
- * into MERMAID_VIEW). Lets you eyeball placement without a browser, which is how
- * ACCESSORY_LAYOUT was tuned. No dependencies.
+ * Composites look + crown + jewelry + prop using the SAME draw rules as the
+ * game: full-frame accessory layers (768×1024, authored on the mermaid then
+ * extracted) stack with the look's contain-fit. Small sticker assets fall
+ * back to ACCESSORY_LAYOUT boxes.
  *
  * Usage:
  *   node scripts/preview-align.mjs [look] [crown] [jewelry] [prop] [outfile]
- * Examples:
- *   node scripts/preview-align.mjs gold-teal crystal shell-choker mirror
- *   node scripts/preview-align.mjs ruby-sunset tiara-gold gem-blue harp out.png
  */
 import { decode, makeCanvas, drawImage, fitContain, encode } from './lib-png.mjs';
 import { fileURLToPath } from 'url';
@@ -22,7 +19,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [look = 'gold-teal', crown = 'crystal', jewelry = 'shell-choker',
        prop = 'mirror', out = 'preview-align.png'] = process.argv.slice(2);
 
-/** Pull this look's axes from config.js. */
 function lookCenters(id) {
   const cfg = fs.readFileSync(`${ROOT}/js/config.js`, 'utf8');
   const re = new RegExp(`id:\\s*'${id}'[\\s\\S]*?(?=\\n\\s*\\{ id:|\\n\\];)`, 'm');
@@ -34,15 +30,15 @@ function lookCenters(id) {
   return {
     headX: num('headX') ?? 0.538,
     neckX: num('neckX') ?? 0.540,
-    handX: num('handX') ?? 0.80,
+    handX: num('handX') ?? 0.81,
     headY: num('headY'),
     neckY: num('neckY'),
-    handY: num('handY') ?? 0.53,
+    handY: num('handY') ?? 0.545,
   };
 }
 const CENTERS = lookCenters(look);
 
-// Keep in sync with js/assets.js
+// Fallback sticker layout (kept in sync with js/assets.js for non-full-frame art)
 const LOOK_CONTENT = { x: 73 / 768, y: 65 / 1024, w: 625 / 768, h: 925 / 1024 };
 const ACCESSORY_LAYOUT = {
   crown:   { x: 0.30,  y: -0.02, w: 0.34, h: 0.11, anchor: 'bottom' },
@@ -71,7 +67,6 @@ function anchorOffsetY(anchor, boxH, fitH) {
   return (boxH - fitH) / 2;
 }
 
-// MERMAID_VIEW is 280x374; render at 2x for clarity.
 const SC = 2, dw = 280 * SC, dh = 374 * SC, pad = 20;
 const canvas = makeCanvas(dw + pad * 2, dh + pad * 2, [30, 50, 80, 255]);
 
@@ -86,12 +81,17 @@ const files = {
   prop: prop === 'none' ? null : `${ROOT}/art/layers/prop/${prop}.png`,
 };
 for (const key of ['jewelry', 'crown', 'prop']) {
-  if (!files[key]) continue;
+  if (!files[key] || !fs.existsSync(files[key])) continue;
   const img = decode(files[key]);
-  const box = accessoryRect(key, lx, ly, lw, lh);
-  const f = fitContain(img.w, img.h, box.w, box.h);
-  const oy = anchorOffsetY(box.anchor, box.h, f.h);
-  drawImage(canvas, img, pad + box.x + f.x, pad + box.y + oy, f.w, f.h);
+  if (img.w >= 600 && img.h >= 800) {
+    // Full-frame layer — same rect as the look
+    drawImage(canvas, img, pad + lx, pad + ly, lw, lh);
+  } else {
+    const box = accessoryRect(key, lx, ly, lw, lh);
+    const f = fitContain(img.w, img.h, box.w, box.h);
+    const oy = anchorOffsetY(box.anchor, box.h, f.h);
+    drawImage(canvas, img, pad + box.x + f.x, pad + box.y + oy, f.w, f.h);
+  }
 }
 
 const outPath = path.isAbsolute(out) ? out : path.join(ROOT, out);

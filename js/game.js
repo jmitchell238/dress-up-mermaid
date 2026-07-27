@@ -443,11 +443,20 @@ function drawLayeredOutfit(ctx, outfit, dx, dy, dw, dh, opts = {}) {
     if (!(layer.img && layer.img.complete && layer.img.naturalWidth)) continue;
 
     if (layer.key === 'crown' || layer.key === 'jewelry' || layer.key === 'prop') {
-      const box = accessoryRect(layer.key, lookX, lookY, lookW, lookH, centers);
-      if (!box) continue;
-      const fit = fitContain(layer.img.naturalWidth, layer.img.naturalHeight, box.w, box.h);
-      const oy = anchorOffsetY(box.anchor, box.h, fit.h);
-      ctx.drawImage(layer.img, box.x + fit.x, box.y + oy, fit.w, fit.h);
+      const iw = layer.img.naturalWidth;
+      const ih = layer.img.naturalHeight;
+      // Full-frame accessory layers (authored on the mermaid, then extracted)
+      // share the look's contain-fit so they line up like Photoshop layers.
+      // Small sticker assets fall back to accessoryRect placement.
+      if (iw >= 600 && ih >= 800) {
+        ctx.drawImage(layer.img, 0, 0, iw, ih, lookX, lookY, lookW, lookH);
+      } else {
+        const box = accessoryRect(layer.key, lookX, lookY, lookW, lookH, centers);
+        if (!box) continue;
+        const fit = fitContain(iw, ih, box.w, box.h);
+        const oy = anchorOffsetY(box.anchor, box.h, fit.h);
+        ctx.drawImage(layer.img, box.x + fit.x, box.y + oy, fit.w, fit.h);
+      }
     } else {
       // Backgrounds (when drawn as a layer) — cover the box
       ctx.drawImage(layer.img, 0, 0, layer.img.naturalWidth, layer.img.naturalHeight, 0, 0, dw, dh);

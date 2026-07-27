@@ -43,11 +43,16 @@ state (`danceT`, `equipFlash`, `trayScroll`, …).
 The mermaid is a stack of full-frame PNGs (`LAYER_W`×`LAYER_H` = 768×1024) drawn
 back-to-front per `LAYER_ORDER` (`bg → look → jewelry → crown → prop`).
 
+**Accessory art is authored like Photoshop layers:** design the crown / necklace /
+hold item *on* the gold-teal mermaid so it looks worn or held, then extract only
+the accessory pixels into a full-frame transparent PNG. At draw time those layers
+use the **same contain-fit rect as the look**, so they line up exactly.
+
 `drawLayeredOutfit` (in `game.js`):
 1. Contain-fits the `look` art into the destination rect (never stretched — the
    view box is kept ~3:4 portrait; see `MERMAID_VIEW`).
-2. Snaps each accessory to the character using the drawn look rect, so
-   accessories track the mermaid as she bobs/dances.
+2. Draws full-frame accessories into that same rect. Small sticker assets (if any)
+   still fall back to `accessoryRect` placement.
 
 ### Accessory alignment
 
