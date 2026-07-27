@@ -72,6 +72,14 @@ for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
   if (neigh < 2) clean[i+3] = 0;
 }
 out.data = clean;
+// Strip baked-in pink/magenta key (look art stores transparent as hot pink RGB)
+for (let i = 0; i < w * h; i++) {
+  const a = out.data[i * 4 + 3], r = out.data[i * 4], g = out.data[i * 4 + 1], b = out.data[i * 4 + 2];
+  if (a < 5) continue;
+  const hot = r > 160 && b > 120 && g < 140 && r > g + 40 && b > g + 30;
+  const mag = r > 180 && b > 150 && g < 100;
+  if (hot || mag || a < 25) out.data[i * 4 + 3] = 0;
+}
 const dest = path.isAbsolute(outPath) ? outPath : path.join(ROOT, outPath);
 encode(out, dest);
 console.log('wrote', dest, 'pixels', n);
