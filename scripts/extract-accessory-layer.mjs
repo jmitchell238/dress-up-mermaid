@@ -25,7 +25,8 @@ if (!compPath || !outPath) {
 const ROIS = {
   crown:   { x0: 0.25, y0: 0.00, x1: 0.80, y1: 0.30 },
   jewelry: { x0: 0.28, y0: 0.28, x1: 0.78, y1: 0.52 },
-  prop:    { x0: 0.50, y0: 0.30, x1: 0.99, y1: 0.75 },
+  // Tall holds (trident, mirror) extend well above the hand — keep y0 low.
+  prop:    { x0: 0.45, y0: 0.05, x1: 0.99, y1: 0.82 },
 };
 const thr = kind === 'jewelry' ? 42 : 48;
 
