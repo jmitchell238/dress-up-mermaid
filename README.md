@@ -1,38 +1,40 @@
 # Mermaid Dress-Up
 
-Dress a beautiful mermaid with illustrated looks, crowns, gems, props, and underwater scenes. Save favorites, show off with bubbles. Creative free play for ages **4–6**.
+Dress up a mermaid with different looks, crowns, necklaces and things to hold, in a choice of underwater scenes. Save your favorites and show them off with bubbles. Free creative play for ages 4–6.
 
-**Play:** https://jmitchell238.github.io/dress-up-mermaid/
+Play at https://jmitchell238.github.io/dress-up-mermaid/. It's one of the games in [Arcade Hub](https://jmitchell238.github.io/arcade-hub/).
 
-Part of [Arcade Hub](https://jmitchell238.github.io/arcade-hub/).
-
-> **Graphics:** real illustrated layered sprites (commercial princess-mermaid style) — not canvas shape blobs.
-
-## Roadmap
-
-See [ROADMAP.md](./ROADMAP.md) for phases, art strategy, and expansion plans.
+The art is illustrated, layered sprites rather than shapes drawn in code.
 
 ## Modes
 
-| Mode | What |
-|------|------|
-| Free Play | Tap cosmetics forever — no goals |
-| Match Me | Copy the little ghost outfit for a cheer |
+| Mode | Description |
+|------|-------------|
+| Free Play | Try on anything, no goals |
+| Match Me | Copy the outfit on the faded mermaid to get a cheer |
 
-## Features (v1)
+## Features
 
-- **13 mermaids** (10 color styles + Wave / Side / Swim poses)
-- **5 scenes**, **6 crowns**, **6 necklaces (Gems)**, **5 handheld toys (Hold)**
+- 13 mermaid looks: 10 color styles and 3 poses (Wave, Side, Swim)
+- 5 scenes, 6 crowns, 6 necklaces and 5 things to hold
 - Save up to 8 favorite outfits
-- Surprise random look + show-off dance/bubbles
-- Sound mute + reduced motion
-- Offline PWA after first visit
-- Zero fail screens
+- A Surprise button for a random look, and a Show off button for a dance and bubbles
+- Mute and Calm motion settings
+- Installable PWA that works offline after the first visit
 
-## Stack
+There are no lives, ads, accounts or fail screens.
 
-Static HTML / CSS / Canvas. No build step.  
-Art: PNG layers under `art/layers/` (chroma-keyed from `.art-raw/`).
+Plans for more content are in [ROADMAP.md](./ROADMAP.md), and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) explains how the game is put together.
+
+## Running locally
+
+```bash
+python3 -m http.server 8080
+```
+
+Then open http://localhost:8080. The service worker needs `localhost` or HTTPS.
+
+Plain HTML, CSS and canvas with no build step. The art is PNG layers in `art/layers/`, cut out from source images with the scripts in `scripts/`. The source images (`.art-raw/`) aren't committed.
 
 ## Tests
 
@@ -42,18 +44,8 @@ node tests/run.mjs
 
 ## Versioning
 
-`GAME_VERSION` in `js/config.js` ↔ `CACHE` in `sw.js`.
-
-## Local preview
-
-```bash
-python3 -m http.server 8080
-```
-
-## Parents
-
-No lives, ads, accounts, or fail screens. Creative play only.
+When you bump `GAME_VERSION` in `js/config.js`, set `CACHE` in `sw.js` to `'dress-up-mermaid-' + GAME_VERSION`.
 
 ## License
 
-Personal project for family Arcade Hub.
+Personal project for the family.
