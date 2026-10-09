@@ -24,28 +24,10 @@ The art is illustrated, layered sprites rather than shapes drawn in code.
 
 There are no lives, ads, accounts or fail screens.
 
-Plans for more content are in [ROADMAP.md](./ROADMAP.md), and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) explains how the game is put together.
-
-## Running locally
-
-```bash
-python3 -m http.server 8080
-```
-
-Then open http://localhost:8080. The service worker needs `localhost` or HTTPS.
-
-Plain HTML, CSS and canvas with no build step. The art is PNG layers in `art/layers/`, cut out from source images with the scripts in `scripts/`. The source images (`.art-raw/`) aren't committed.
-
-## Tests
-
-```bash
-node tests/run.mjs
-```
-
-## Versioning
-
-When you bump `GAME_VERSION` in `js/config.js`, set `CACHE` in `sw.js` to `'dress-up-mermaid-' + GAME_VERSION`.
-
 ## License
 
 Personal project for the family.
+
+## Development
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for running it locally, tests and versioning, and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the game is put together. Plans for more content are in [docs/ROADMAP.md](docs/ROADMAP.md).
